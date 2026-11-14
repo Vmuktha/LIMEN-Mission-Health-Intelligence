@@ -43,36 +43,6 @@ export const PLANET_FRAGMENT_SHADER = /* glsl */ `
   }
 `;
 
-export const CLOUD_VERTEX_SHADER = /* glsl */ `
-  varying vec2 vUv;
-  varying vec3 vViewNormal;
-  varying vec3 vViewPosition;
-
-  void main() {
-    vUv = uv;
-    vViewNormal = normalize(normalMatrix * normal);
-    vec4 viewPosition = modelViewMatrix * vec4(position, 1.0);
-    vViewPosition = viewPosition.xyz;
-    gl_Position = projectionMatrix * viewPosition;
-  }
-`;
-
-export const CLOUD_FRAGMENT_SHADER = /* glsl */ `
-  uniform sampler2D uCloudMap;
-  uniform vec3 uLightDirection;
-  uniform vec3 uCloudColor;
-  varying vec2 vUv;
-  varying vec3 vViewNormal;
-  varying vec3 vViewPosition;
-
-  void main() {
-    float cloud = smoothstep(0.32, 0.78, texture2D(uCloudMap, vUv).r);
-    float sunlight = max(dot(normalize(vViewNormal), normalize(uLightDirection)), 0.0);
-    float alpha = cloud * (0.08 + 0.34 * smoothstep(0.0, 0.22, sunlight));
-    gl_FragColor = vec4(uCloudColor, alpha);
-  }
-`;
-
 export const ATMOSPHERE_FRAGMENT_SHADER = /* glsl */ `
   uniform vec3 uAtmosphere;
   varying vec3 vViewNormal;

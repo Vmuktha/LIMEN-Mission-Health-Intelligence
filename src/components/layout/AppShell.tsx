@@ -21,7 +21,7 @@ export type AppShellVariant = "reading" | "immersive";
 export function AppShell({ children, variant = "reading" }: { readonly children: ReactNode; readonly variant?: AppShellVariant }) {
   return (
     <SceneProvider layer={variant === "immersive" ? "webgl" : "css"}>
-      <div className={`relative flex min-h-screen flex-col ${variant === "immersive" ? "bg-void text-glow" : "text-ink"}`}>
+      <div className="relative flex min-h-screen flex-col bg-void text-glow">
         <SceneBackground />
         <a
           href="#main-content"
@@ -34,7 +34,7 @@ export function AppShell({ children, variant = "reading" }: { readonly children:
           <NavRail />
           <main
             id="main-content"
-            className={variant === "immersive" ? "min-w-0 flex-1" : "min-w-0 flex-1 bg-surface-muted px-6 py-10 md:px-10"}
+            className={variant === "immersive" ? "min-w-0 flex-1" : "min-w-0 flex-1 border-l border-horizon/40 bg-hull/85 px-5 py-8 backdrop-blur-sm sm:px-7 md:px-10 md:py-10"}
           >
             {children}
           </main>

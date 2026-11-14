@@ -1,10 +1,12 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import useSWR from 'swr';
 import Link from 'next/link';
 import { AppShell } from '@/components/layout/AppShell';
 import { listMissionContexts, saveMissionContext } from '@/lib/storage/mission-storage';
 import type { MissionContext, MissionProfileKind } from '@/types/mission-context';
 import type { MissionPhase } from '@/types/mission';
+import { EmptyState, PageHeader, PhaseTimeline } from '@/components/ui/InstrumentUI';
 
 function generateId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -35,7 +37,11 @@ const PROFILES: readonly MissionProfileKind[] = [
 ];
 
 export default function MissionContextsPage() {
-  const [contexts, setContexts] = useState<readonly MissionContext[]>([]);
+  const { data: contexts = [], error: contextsError, isLoading: contextsLoading, mutate } = useSWR("mission-contexts", async () => {
+    const result = await listMissionContexts();
+    if (!result.ok) throw new Error(result.error.message);
+    return result.value;
+  });
   const [missionId, setMissionId] = useState('');
   const [missionName, setMissionName] = useState('');
   const [profile, setProfile] = useState<MissionProfileKind>('earth-orbit');
@@ -44,12 +50,6 @@ export default function MissionContextsPage() {
   const [operationalContext, setOperationalContext] = useState('');
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-
-  useEffect(() => {
-    listMissionContexts().then((res) => {
-      if (res.ok) setContexts(res.value);
-    });
-  }, []);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -89,7 +89,7 @@ export default function MissionContextsPage() {
 
     const res = await saveMissionContext(context);
     if (res.ok) {
-      setContexts((prev) => [...prev, res.value]);
+      await mutate((current = []) => [...current, res.value], { revalidate: false });
       setMissionId('');
       setMissionName('');
       setCustomPhaseLabel('');
@@ -102,44 +102,45 @@ export default function MissionContextsPage() {
 
   return (
     <AppShell>
-      <section className="max-w-4xl mx-auto py-6">
-        <h1 className="text-2xl font-bold mb-2">Mission Contexts</h1>
-        <p className="text-sm text-slate-600 mb-6">
-          Record an explicit mission frame of reference. Phases and profiles are user-entered observations, not automated telemetry.
-        </p>
+      <section className="instrument-page mx-auto max-w-5xl py-4">
+        <PageHeader eyebrow="Context · user recorded" title="Mission contexts" description="Record an explicit mission frame of reference. Phases and profiles are user-entered observations, not automated telemetry." />
 
-        {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>}
-        {successMsg && <div className="mb-4 p-3 bg-emerald-100 text-emerald-800 rounded">{successMsg}</div>}
+        {contextsError && <p role="alert" className="mb-4 rounded-control border border-alert/40 bg-alert/10 p-3 text-alert-ink">Mission contexts could not be read: {contextsError.message}</p>}
+        {error && <div role="alert" className="mb-4 rounded-control border border-alert/40 bg-alert/10 p-3 text-alert-ink">{error}</div>}
+        {successMsg && <div role="status" className="mb-4 rounded-control border border-ion/30 bg-ion/10 p-3 text-ion-soft">{successMsg}</div>}
 
-        <form onSubmit={handleCreate} className="bg-slate-50 border border-slate-200 rounded p-4 mb-6">
-          <h2 className="text-lg font-semibold mb-4">Record New Mission Context</h2>
-          <div className="grid grid-cols-2 gap-4 mb-4">
+        <form onSubmit={handleCreate} className="mb-7 rounded-panel border border-horizon bg-hull-raised/65 p-5 shadow-panel sm:p-6">
+          <h2 className="mb-4 text-lg font-semibold text-glow">Record a mission context</h2>
+          <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium mb-1">Mission ID</label>
+              <label htmlFor="mission-id" className="mb-1 block text-sm font-medium">Mission ID</label>
               <input
                 type="text"
+                id="mission-id"
                 value={missionId}
                 onChange={(e) => setMissionId(e.target.value)}
                 placeholder="e.g. mission-artemis-2"
-                className="w-full border rounded p-2 text-sm bg-white"
+                className="instrument-control"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Mission Name</label>
+              <label htmlFor="mission-name" className="mb-1 block text-sm font-medium">Mission name</label>
               <input
                 type="text"
+                id="mission-name"
                 value={missionName}
                 onChange={(e) => setMissionName(e.target.value)}
                 placeholder="e.g. Artemis II Lunar Mission"
-                className="w-full border rounded p-2 text-sm bg-white"
+                className="instrument-control"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Mission Profile</label>
+              <label htmlFor="mission-profile" className="mb-1 block text-sm font-medium">Mission profile</label>
               <select
+                id="mission-profile"
                 value={profile}
                 onChange={(e) => setProfile(e.target.value as MissionProfileKind)}
-                className="w-full border rounded p-2 text-sm bg-white"
+                className="instrument-control"
               >
                 {PROFILES.map((p) => (
                   <option key={p} value={p}>{p}</option>
@@ -147,11 +148,12 @@ export default function MissionContextsPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Mission Phase</label>
+              <label htmlFor="mission-phase" className="mb-1 block text-sm font-medium">Mission phase</label>
               <select
+                id="mission-phase"
                 value={phase}
                 onChange={(e) => setPhase(e.target.value as MissionPhase)}
-                className="w-full border rounded p-2 text-sm bg-white"
+                className="instrument-control"
               >
                 {CANONICAL_PHASES.map((ph) => (
                   <option key={ph} value={ph}>{ph}</option>
@@ -159,54 +161,55 @@ export default function MissionContextsPage() {
               </select>
             </div>
             {phase === 'custom' && (
-              <div className="col-span-2">
-                <label className="block text-sm font-medium mb-1">Custom Phase Label</label>
+              <div className="sm:col-span-2">
+                <label htmlFor="custom-phase-label" className="mb-1 block text-sm font-medium">Custom phase label</label>
                 <input
                   type="text"
+                  id="custom-phase-label"
                   value={customPhaseLabel}
                   onChange={(e) => setCustomPhaseLabel(e.target.value)}
                   placeholder="e.g. translunar-injection-prep"
-                  className="w-full border rounded p-2 text-sm bg-white"
+                  className="instrument-control"
                 />
               </div>
             )}
-            <div className="col-span-2">
-              <label className="block text-sm font-medium mb-1">Operational Context (optional)</label>
+            <div className="sm:col-span-2">
+              <label htmlFor="operational-context" className="mb-1 block text-sm font-medium">Operational context (optional)</label>
               <input
                 type="text"
+                id="operational-context"
                 value={operationalContext}
                 onChange={(e) => setOperationalContext(e.target.value)}
                 placeholder="e.g. Pre-launch checks completed at launch pad 39B"
-                className="w-full border rounded p-2 text-sm bg-white"
+                className="instrument-control"
               />
             </div>
           </div>
           <button type="submit" className="btn-primary">Record Mission Context</button>
         </form>
 
-        <h2 className="text-lg font-semibold mb-3">Persisted Mission Contexts ({contexts.length})</h2>
-        {contexts.length === 0 ? (
-          <p className="text-sm text-slate-500 italic p-4 bg-slate-100 rounded">
-            No mission contexts recorded yet. Complete the form above to record the initial frame of reference.
-          </p>
+        <h2 className="text-lg font-semibold text-glow">Persisted Mission Contexts ({contexts.length})</h2>
+        {contextsError ? null : contextsLoading ? <p role="status" className="text-sm text-glow-muted">Reading saved mission contexts…</p> : contexts.length === 0 ? (
+          <EmptyState title="No mission contexts recorded">Complete the form above to record an explicit frame of reference. Mission details are never invented or inferred.</EmptyState>
         ) : (
           <ul className="space-y-2">
             {contexts.map((c) => (
-              <li key={c.id} className="p-3 bg-white border border-slate-200 rounded">
-                <div className="font-semibold text-slate-900">{c.missionName} <span className="text-xs text-slate-500 font-normal">({c.missionId})</span></div>
-                <div className="text-sm text-slate-600">
-                  Profile: <span className="font-medium">{c.profile}</span> | Phase: <span className="font-medium text-cyan-800">{c.phase === 'custom' ? `${c.customPhaseLabel} (custom)` : c.phase}</span>
+              <li key={c.id} className="rounded-card border border-horizon bg-hull-raised/45 p-4">
+                <div className="font-semibold text-glow">{c.missionName} <span className="text-xs font-normal text-glow-muted">· {c.missionId}</span></div>
+                <div className="text-sm text-glow-muted">
+                  Profile: <span className="font-medium text-glow">{c.profile}</span> · Phase: <span className="font-medium text-ion-soft">{c.phase === 'custom' ? `${c.customPhaseLabel} (custom)` : c.phase}</span>
                 </div>
-                {c.operationalContext && <div className="text-xs text-slate-500 mt-1">Context: {c.operationalContext}</div>}
-                <div className="text-xs text-slate-400 mt-1">Recorded: {new Date(c.phaseRecordedAt).toLocaleString()} | ID: {c.id}</div>
+                <div className="mt-4"><PhaseTimeline phases={[c.phase === 'custom' ? c.customPhaseLabel ?? 'custom' : c.phase]} current={c.phase === 'custom' ? c.customPhaseLabel ?? 'custom' : c.phase} /></div>
+                {c.operationalContext && <div className="mt-2 text-sm leading-6 text-glow-muted">Context: {c.operationalContext}</div>}
+                <div className="mt-2 text-xs text-glow-faint">Recorded: {new Date(c.phaseRecordedAt).toLocaleString()}</div>
               </li>
             ))}
           </ul>
         )}
 
         <div className="flex gap-4 mt-6 text-sm">
-          <Link href="/mission/events" className="text-cyan-700 hover:underline">Go to Mission Events →</Link>
-          <Link href="/mission/transitions" className="text-cyan-700 hover:underline">Go to Mission Transitions →</Link>
+          <Link href="/mission/events" className="text-sm font-medium text-ion-soft underline-offset-4 hover:underline">Go to Mission Events →</Link>
+          <Link href="/mission/transitions" className="text-sm font-medium text-ion-soft underline-offset-4 hover:underline">Go to Mission Transitions →</Link>
         </div>
       </section>
     </AppShell>

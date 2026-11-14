@@ -53,7 +53,6 @@ export function HeroStage() {
         >
           <div className="limen-earth-fallback" aria-hidden="true">
             <div className="limen-earth-fallback__surface" />
-            <div className="limen-earth-fallback__clouds" />
             <div className="limen-earth-fallback__terminator" />
             <div className="limen-earth-fallback__atmosphere" />
           </div>

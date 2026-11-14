@@ -49,7 +49,7 @@ export function RecoveryDashboard() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-6">
+    <div className="recovery-dashboard mx-auto w-full max-w-6xl space-y-6">
       <RecoveryHeader completedSessions={completedSessions} />
 
       {loadState.status === "loading" && <RecoveryLoading />}

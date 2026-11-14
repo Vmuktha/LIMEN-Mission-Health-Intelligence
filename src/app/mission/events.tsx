@@ -1,10 +1,12 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import useSWR from 'swr';
 import Link from 'next/link';
 import { AppShell } from '@/components/layout/AppShell';
 import { listMissionContexts, listMissionEvents, saveMissionEvent } from '@/lib/storage/mission-storage';
-import type { MissionContext, MissionEvent } from '@/types/mission-context';
+import type { MissionEvent } from '@/types/mission-context';
 import type { MissionPhase } from '@/types/mission';
+import { EmptyState, EventStream, PageHeader, ProvenanceLabel } from '@/components/ui/InstrumentUI';
 
 function generateId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -28,32 +30,26 @@ const CANONICAL_PHASES: readonly MissionPhase[] = [
 ];
 
 export default function MissionEventsPage() {
-  const [contexts, setContexts] = useState<readonly MissionContext[]>([]);
-  const [events, setEvents] = useState<readonly MissionEvent[]>([]);
+  const { data: contexts = [], error: contextsError, isLoading: contextsLoading } = useSWR("mission-contexts", async () => {
+    const result = await listMissionContexts();
+    if (!result.ok) throw new Error(result.error.message);
+    return result.value;
+  });
+  const { data: events = [], error: eventsError, isLoading: eventsLoading, mutate: mutateEvents } = useSWR("mission-events", async () => {
+    const result = await listMissionEvents();
+    if (!result.ok) throw new Error(result.error.message);
+    return result.value;
+  });
   const [selectedContextId, setSelectedContextId] = useState('');
   const [description, setDescription] = useState('');
   const [occurredAt, setOccurredAt] = useState(() => new Date().toISOString().slice(0, 16));
-  const [phase, setPhase] = useState<MissionPhase | ''>('');
+  const [phase, setPhase] = useState<MissionPhase | '' | null>(null);
   const [operationalContext, setOperationalContext] = useState('');
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  useEffect(() => {
-    listMissionContexts().then((res) => {
-      if (res.ok) {
-        setContexts(res.value);
-        if (res.value.length > 0) {
-          setSelectedContextId(res.value[0].id);
-          setPhase(res.value[0].phase);
-        }
-      }
-    });
-    listMissionEvents().then((res) => {
-      if (res.ok) setEvents(res.value);
-    });
-  }, []);
-
-  const activeContext = contexts.find((c) => c.id === selectedContextId) ?? null;
+  const activeContext = contexts.find((context) => context.id === selectedContextId) ?? contexts[0] ?? null;
+  const selectedPhase = phase === null ? activeContext?.phase ?? "" : phase;
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -83,7 +79,7 @@ export default function MissionEventsPage() {
       missionId: activeContext.missionId,
       occurredAt: isoOccurred,
       description: description.trim(),
-      ...(phase ? { phase } : {}),
+      ...(selectedPhase ? { phase: selectedPhase } : {}),
       ...(operationalContext.trim() ? { operationalContext: operationalContext.trim() } : {}),
       source: 'manual-entry',
       provenance: 'browser-user-generated',
@@ -95,7 +91,7 @@ export default function MissionEventsPage() {
 
     const res = await saveMissionEvent(event);
     if (res.ok) {
-      setEvents((prev) => [...prev, res.value]);
+      await mutateEvents((current = []) => [...current, res.value], { revalidate: false });
       setDescription('');
       setOperationalContext('');
       setSuccessMsg(`Event '${res.value.description}' recorded for mission '${activeContext.missionName}'.`);
@@ -106,19 +102,18 @@ export default function MissionEventsPage() {
 
   return (
     <AppShell>
-      <section className="max-w-4xl mx-auto py-6">
-        <h1 className="text-2xl font-bold mb-2">Mission Events</h1>
-        <p className="text-sm text-slate-600 mb-6">
-          Record notable operational events linked to an explicit persisted mission context. Events must reference a real mission context.
-        </p>
+      <section className="instrument-page mx-auto max-w-5xl py-4">
+        <PageHeader eyebrow="Context · user recorded" title="Mission events" description="Record notable operational events linked to an explicit persisted mission context. Each event must reference a real mission context." />
 
-        {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>}
-        {successMsg && <div className="mb-4 p-3 bg-emerald-100 text-emerald-800 rounded">{successMsg}</div>}
+        {contextsError && <p role="alert" className="mb-4 rounded-control border border-alert/40 bg-alert/10 p-3 text-alert-ink">Mission contexts could not be read: {contextsError.message}</p>}
+        {eventsError && <p role="alert" className="mb-4 rounded-control border border-alert/40 bg-alert/10 p-3 text-alert-ink">Mission events could not be read: {eventsError.message}</p>}
+        {error && <div role="alert" className="mb-4 rounded-control border border-alert/40 bg-alert/10 p-3 text-alert-ink">{error}</div>}
+        {successMsg && <div role="status" className="mb-4 rounded-control border border-ion/30 bg-ion/10 p-3 text-ion-soft">{successMsg}</div>}
 
-        {contexts.length === 0 ? (
-          <div className="p-6 bg-amber-50 border border-amber-200 rounded mb-6 text-center">
-            <p className="text-amber-800 font-medium mb-2">No Mission Contexts Found</p>
-            <p className="text-sm text-amber-700 mb-4">
+        {contextsError ? null : contextsLoading ? <p role="status" className="text-sm text-glow-muted">Reading saved mission contexts…</p> : contexts.length === 0 ? (
+          <div className="mb-7 rounded-panel border border-ember/30 bg-ember/5 p-5 text-center sm:p-7">
+            <p className="mb-2 font-semibold text-amber-200">No mission contexts found</p>
+            <p className="mb-4 text-sm text-glow-muted">
               Mission events must be explicitly linked to an existing mission context record.
             </p>
             <Link href="/mission/contexts" className="btn-primary inline-block">
@@ -126,19 +121,20 @@ export default function MissionEventsPage() {
             </Link>
           </div>
         ) : (
-          <form onSubmit={handleCreate} className="bg-slate-50 border border-slate-200 rounded p-4 mb-6">
-            <h2 className="text-lg font-semibold mb-4">Record New Mission Event</h2>
-            <div className="grid grid-cols-2 gap-4 mb-4">
+          <form onSubmit={handleCreate} className="mb-7 rounded-panel border border-horizon bg-hull-raised/65 p-5 shadow-panel sm:p-6">
+            <h2 className="mb-4 text-lg font-semibold text-glow">Record a mission event</h2>
+            <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium mb-1">Select Mission Context</label>
+                <label htmlFor="event-mission-context" className="mb-1 block text-sm font-medium">Select mission context</label>
                 <select
-                  value={selectedContextId}
+                  id="event-mission-context"
+                  value={selectedContextId || contexts[0]?.id || ""}
                   onChange={(e) => {
                     setSelectedContextId(e.target.value);
                     const matching = contexts.find((c) => c.id === e.target.value);
                     if (matching) setPhase(matching.phase);
                   }}
-                  className="w-full border rounded p-2 text-sm bg-white"
+                  className="instrument-control"
                 >
                   {contexts.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -147,36 +143,39 @@ export default function MissionEventsPage() {
                   ))}
                 </select>
                 {activeContext && (
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="mt-2 text-xs text-glow-muted">
                     Inherits Mission ID: <span className="font-mono">{activeContext.missionId}</span>
                   </p>
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Occurred At</label>
+                <label htmlFor="event-occurred-at" className="mb-1 block text-sm font-medium">Occurred at</label>
                 <input
+                  id="event-occurred-at"
                   type="datetime-local"
                   value={occurredAt}
                   onChange={(e) => setOccurredAt(e.target.value)}
-                  className="w-full border rounded p-2 text-sm bg-white"
+                  className="instrument-control"
                 />
               </div>
-              <div className="col-span-2">
-                <label className="block text-sm font-medium mb-1">Event Description</label>
+              <div className="sm:col-span-2">
+                <label htmlFor="event-description" className="mb-1 block text-sm font-medium">Event description</label>
                 <input
+                  id="event-description"
                   type="text"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="e.g. Engine burn completed for orbital insertion"
-                  className="w-full border rounded p-2 text-sm bg-white"
+                  className="instrument-control"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Mission Phase at Time of Event (optional)</label>
+                <label htmlFor="event-phase" className="mb-1 block text-sm font-medium">Mission phase at event time (optional)</label>
                 <select
-                  value={phase}
-                  onChange={(e) => setPhase(e.target.value as MissionPhase)}
-                  className="w-full border rounded p-2 text-sm bg-white"
+                  id="event-phase"
+                  value={selectedPhase}
+                  onChange={(e) => setPhase(e.target.value as MissionPhase | "")}
+                  className="instrument-control"
                 >
                   <option value="">-- context default ({activeContext?.phase}) --</option>
                   {CANONICAL_PHASES.map((ph) => (
@@ -185,13 +184,14 @@ export default function MissionEventsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Operational Context (optional)</label>
+                <label htmlFor="event-context" className="mb-1 block text-sm font-medium">Operational context (optional)</label>
                 <input
+                  id="event-context"
                   type="text"
                   value={operationalContext}
                   onChange={(e) => setOperationalContext(e.target.value)}
                   placeholder="e.g. Nominal delta-v achieved"
-                  className="w-full border rounded p-2 text-sm bg-white"
+                  className="instrument-control"
                 />
               </div>
             </div>
@@ -199,30 +199,22 @@ export default function MissionEventsPage() {
           </form>
         )}
 
-        <h2 className="text-lg font-semibold mb-3">Persisted Mission Events ({events.length})</h2>
-        {events.length === 0 ? (
-          <p className="text-sm text-slate-500 italic p-4 bg-slate-100 rounded">
-            No mission events recorded yet. Complete the form above to record an event.
-          </p>
+        <h2 className="mb-3 text-lg font-semibold text-glow">Persisted mission events ({eventsLoading ? "…" : events.length})</h2>
+        {eventsError ? null : eventsLoading ? <p role="status" className="text-sm text-glow-muted">Reading saved mission events…</p> : events.length === 0 ? (
+          <EmptyState title="No mission events recorded">Create an event above and link it to an existing mission context. No event is inferred from a timestamp.</EmptyState>
         ) : (
-          <ul className="space-y-2">
-            {events.map((e) => (
-              <li key={e.id} className="p-3 bg-white border border-slate-200 rounded">
-                <div className="font-semibold text-slate-900">{e.description}</div>
-                <div className="text-sm text-slate-600">
-                  Mission: <span className="font-medium">{e.missionId}</span> | Context ID: <span className="font-mono text-xs">{e.missionContextId}</span>
-                  {e.phase && <span> | Phase: <span className="font-medium text-cyan-800">{e.phase}</span></span>}
-                </div>
-                {e.operationalContext && <div className="text-xs text-slate-500 mt-1">Context: {e.operationalContext}</div>}
-                <div className="text-xs text-slate-400 mt-1">Occurred: {new Date(e.occurredAt).toLocaleString()} | ID: {e.id}</div>
-              </li>
-            ))}
-          </ul>
+          <EventStream entries={events.map((event) => ({
+            id: event.id,
+            title: event.description,
+            timestamp: event.occurredAt,
+            detail: <span>Mission: {event.missionId}{event.phase ? ` · Phase: ${event.phase}` : ""}{event.operationalContext ? ` · ${event.operationalContext}` : ""}</span>,
+            badge: <ProvenanceLabel>Manual record</ProvenanceLabel>,
+          }))} />
         )}
 
         <div className="flex gap-4 mt-6 text-sm">
-          <Link href="/mission/contexts" className="text-cyan-700 hover:underline">← Mission Contexts</Link>
-          <Link href="/mission/transitions" className="text-cyan-700 hover:underline">Go to Mission Transitions →</Link>
+          <Link href="/mission/contexts" className="text-sm font-medium text-ion-soft underline-offset-4 hover:underline">← Mission Contexts</Link>
+          <Link href="/mission/transitions" className="text-sm font-medium text-ion-soft underline-offset-4 hover:underline">Go to Mission Transitions →</Link>
         </div>
       </section>
     </AppShell>

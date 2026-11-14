@@ -149,7 +149,7 @@ export function LandingExperience() {
           <p>LIMEN · Mission Health Intelligence · research prototype</p>
           <p>Browser-local records · descriptive only · not a diagnostic or fitness-for-duty system</p>
           <p className="basis-full border-t border-horizon/40 pt-4 leading-6">
-            Earth surface and cloud textures: <a className="underline decoration-ion/50 underline-offset-4 hover:text-glow" href="https://visibleearth.nasa.gov/collection/1484/blue-marble" target="_blank" rel="noreferrer">NASA Blue Marble imagery</a> (NASA/GSFC; public domain). NASA does not endorse LIMEN.
+            Earth surface and cloud textures: locally bundled AI-generated visualization, not NASA imagery. NASA does not endorse LIMEN.
           </p>
         </div>
       </footer>
