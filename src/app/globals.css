@@ -1,0 +1,254 @@
+@import "tailwindcss";
+
+/*
+ * LIMEN visual foundations — Phase 8A-0.
+ *
+ * This file is the single source of visual truth. It defines semantic tokens
+ * (never raw palette steps), typography, radius, border, elevation and motion
+ * scales, plus the global accessibility baseline.
+ *
+ * Two families of surfaces exist during the migration:
+ *   - The dark instrument system (void, hull, horizon, ion, plasma, ember,
+ *     alert) is the approved palette for the cinematic redesign.
+ *   - The light surface family (surface, line, ink, accent/ember/alert roles)
+ *     is the vocabulary the current product surfaces already use, tokenised
+ *     without changing how they look.
+ *
+ * Route redesigns adopt the dark instrument system in later phases; until then
+ * every rendered value stays visually identical.
+ */
+
+:root {
+  /* ── Dark instrument system (approved palette) ─────────────────────────── */
+  --limen-void: #05070f;
+  --limen-hull: #0b101c;
+  --limen-hull-raised: #141b2b;
+  --limen-horizon: #1e293b;
+  --limen-ion: #22d3ee;
+  --limen-ion-soft: #67e8f9;
+  --limen-plasma: #a78bfa;
+  --limen-plasma-bright: #e879f9;
+  --limen-ember: #f59e0b;
+  --limen-alert: #f43f5e;
+  --limen-glow: #f8fafc;
+  --limen-glow-muted: #94a3b8;
+  --limen-glow-faint: #62748e;
+
+  /* ── Light surfaces ─────────────────────────────────────────────────────── */
+  --limen-surface: #ffffff;
+  --limen-surface-muted: #f8fafc;
+  --limen-surface-sunken: #f1f5f9;
+  --limen-line: #e2e8f0;
+  --limen-line-strong: #cad5e2;
+  --limen-ink: #0f172b;
+  --limen-ink-strongest: #020618;
+  --limen-ink-strong: #314158;
+  --limen-ink-soft: #45556c;
+  --limen-ink-muted: #62748e;
+  --limen-ink-faint: #90a1b9;
+
+  /* ── Accent, warning and alert roles on light surfaces ─────────────────── */
+  --limen-accent-edge: #a2f4fd;
+  --limen-accent-wash: #ecfeff;
+  --limen-accent-ink: #005f78;
+  --limen-accent-label: #007492;
+  --limen-ember-edge: #fee685;
+  --limen-ember-wash: #fffbeb;
+  --limen-ember-ink: #7b3306;
+  --limen-alert-edge: #ffccd3;
+  --limen-alert-wash: #fff1f2;
+  --limen-alert-ink: #8b0836;
+
+  /* ── Motion ─────────────────────────────────────────────────────────────── */
+  --limen-duration-fast: 120ms;
+  --limen-duration-base: 240ms;
+  --limen-duration-slow: 480ms;
+  --limen-ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --limen-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  /* ── Elevation ──────────────────────────────────────────────────────────── */
+  --limen-shadow-card: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --limen-shadow-panel: 0 12px 32px -16px rgb(2 6 23 / 0.28), 0 1px 2px rgb(2 6 23 / 0.08);
+  --limen-shadow-overlay: 0 24px 64px -24px rgb(2 6 23 / 0.45);
+
+  /* ── Legacy aliases kept so existing surfaces migrate incrementally ─────── */
+  --background: var(--limen-surface-muted);
+  --foreground: var(--limen-ink);
+
+  /* Height of the application chrome above the content column. */
+  --shell-chrome-height: 65px;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-geist-sans);
+
+  /* Dark instrument system */
+  --color-void: var(--limen-void);
+  --color-hull: var(--limen-hull);
+  --color-hull-raised: var(--limen-hull-raised);
+  --color-horizon: var(--limen-horizon);
+  --color-ion: var(--limen-ion);
+  --color-ion-soft: var(--limen-ion-soft);
+  --color-plasma: var(--limen-plasma);
+  --color-plasma-bright: var(--limen-plasma-bright);
+  --color-ember: var(--limen-ember);
+  --color-alert: var(--limen-alert);
+  --color-glow: var(--limen-glow);
+  --color-glow-muted: var(--limen-glow-muted);
+  --color-glow-faint: var(--limen-glow-faint);
+
+  /* Light surfaces */
+  --color-surface: var(--limen-surface);
+  --color-surface-muted: var(--limen-surface-muted);
+  --color-surface-sunken: var(--limen-surface-sunken);
+  --color-line: var(--limen-line);
+  --color-line-strong: var(--limen-line-strong);
+  --color-ink: var(--limen-ink);
+  --color-ink-strongest: var(--limen-ink-strongest);
+  --color-ink-strong: var(--limen-ink-strong);
+  --color-ink-soft: var(--limen-ink-soft);
+  --color-ink-muted: var(--limen-ink-muted);
+  --color-ink-faint: var(--limen-ink-faint);
+
+  /* Accent, warning and alert roles */
+  --color-accent-edge: var(--limen-accent-edge);
+  --color-accent-wash: var(--limen-accent-wash);
+  --color-accent-ink: var(--limen-accent-ink);
+  --color-accent-label: var(--limen-accent-label);
+  --color-ember-edge: var(--limen-ember-edge);
+  --color-ember-wash: var(--limen-ember-wash);
+  --color-ember-ink: var(--limen-ember-ink);
+  --color-alert-edge: var(--limen-alert-edge);
+  --color-alert-wash: var(--limen-alert-wash);
+  --color-alert-ink: var(--limen-alert-ink);
+
+  /* Radius */
+  --radius-control: 0.5rem;
+  --radius-card: 0.75rem;
+  --radius-panel: 1rem;
+
+  /* Elevation */
+  --shadow-card: var(--limen-shadow-card);
+  --shadow-panel: var(--limen-shadow-panel);
+  --shadow-overlay: var(--limen-shadow-overlay);
+
+  /* Motion */
+  --ease-limen: var(--limen-ease-standard);
+  --ease-limen-exit: var(--limen-ease-exit);
+  --duration-fast: 120ms;
+  --duration-base: 240ms;
+  --duration-slow: 480ms;
+  --animate-limen-drift: limen-drift 76s linear infinite;
+  --animate-limen-drift-slow: limen-drift-slow 104s linear infinite;
+
+  /* Typography */
+  --text-display-xl: clamp(2.75rem, 6vw, 4.25rem);
+  --text-display-xl--line-height: 1.02;
+  --text-display-xl--letter-spacing: -0.03em;
+  --text-display-lg: clamp(2rem, 4vw, 3rem);
+  --text-display-lg--line-height: 1.08;
+  --text-display-lg--letter-spacing: -0.02em;
+  --text-display-md: clamp(1.5rem, 2.6vw, 2rem);
+  --text-display-md--line-height: 1.15;
+  --text-display-md--letter-spacing: -0.015em;
+}
+
+/*
+ * Scene drift. The environment moves at a rate that reads as geological rather
+ * than animated, and the reduced-motion baseline freezes it entirely.
+ */
+@keyframes limen-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-2.5%, -1.5%, 0);
+  }
+}
+
+@keyframes limen-drift-slow {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(1.5%, 2%, 0);
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /*
+   * Scroll reveal. The animation is driven by a data attribute so it never
+   * costs a React render, and it is removed entirely for visitors who prefer
+   * reduced motion.
+   */
+  [data-reveal] {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+    transition:
+      opacity var(--limen-duration-slow) var(--limen-ease-standard),
+      transform var(--limen-duration-slow) var(--limen-ease-standard);
+  }
+
+  [data-reveal][data-visible="true"] {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Below the large breakpoint the compact navigation strip adds to the header. */
+  @media (max-width: 1023px) {
+    :root {
+      --shell-chrome-height: 111px;
+    }
+  }
+
+  body {
+    background: var(--limen-surface-muted);
+    color: var(--limen-ink);
+    font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: rgb(34 211 238 / 0.28);
+    color: var(--limen-ink-strongest);
+  }
+
+  /*
+   * Focus baseline. A single visible ion outline for every keyboard-reachable
+   * element. Components that need a bespoke ring may opt out with
+   * `outline-none`, which stays in the utilities layer and therefore wins.
+   */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--limen-ion);
+    outline-offset: 2px;
+  }
+
+  /*
+   * Reduced-motion baseline. Motion is a presentation choice, never a carrier
+   * of meaning, so it can be removed without changing what is communicated.
+   */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+
+    [data-reveal] {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+}
