@@ -3,6 +3,9 @@
 # Offline TypeScript test compilation output
 .test-build/
 
+# Offline TypeScript data-generation build output
+.data-build/
+
 # dependencies
 /node_modules
 /.pnp

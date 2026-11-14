@@ -1,4 +1,29 @@
-export type MissionPhase = "preflight" | "inflight" | "postflight" | "reconditioning";
+/**
+ * Mission phases are an explicitly recorded vocabulary. LIMEN never derives a
+ * phase from a timestamp, a date, or a fictional mission schedule.
+ *
+ * The canonical phases are the Stage 4 closed vocabulary. The three legacy
+ * values are retained so that check-ins and recovery records written before
+ * Stage 4 remain valid and readable. New records should use canonical phases;
+ * `custom` requires a separately recorded `customPhaseLabel`.
+ */
+export type MissionPhase =
+  | "preflight"
+  | "launch"
+  | "ascent"
+  | "early-orbit"
+  | "inflight-operations"
+  | "eva-preparation"
+  | "eva"
+  | "return"
+  | "landing"
+  | "postflight-recovery"
+  | "custom"
+  // Legacy values retained for backwards compatibility with stored records.
+  | "inflight"
+  | "postflight"
+  | "reconditioning";
+
 export type GravityEnvironment = "earth-1g" | "microgravity" | "gravity-transition" | "unknown";
 
 export interface MissionProfile {

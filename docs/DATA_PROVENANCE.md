@@ -1,11 +1,13 @@
 # Data provenance
 
-LIMEN separates three categories of information.
+LIMEN separates the following categories of information.
 
 1. **Published astronaut research**: study descriptions and findings, preserved as citations in `SCIENTIFIC_EVIDENCE.md`. These are not re-labeled as LIMEN observations.
 2. **User-generated browser assessment measurements**: completed browser assessment sessions may be persisted locally in the browser's IndexedDB database. They retain their original trial records, timestamps, phase/rotation conditions, missing values, and already-derived summaries. No server database, authentication, cloud synchronization, or external data import is part of this phase.
 3. **User-generated sensorimotor check-ins**: optional 0–10 self-reports of dizziness/disorientation, balance or coordination difficulty, nausea, visual discomfort, fatigue, and movement confidence. These remain subjective self-reports and are not objective sensor, vestibular, neurological, or medical measurements. Unanswered fields remain absent, never zero.
 4. **Simulated mission demonstration data**: optional illustrative records used only to explain a future interface. They must be visibly labeled simulated at every appearance and must never be mixed with user-generated data.
+5. **User-recorded mission context and workflow records**: mission contexts, mission events, and follow-up records entered in this browser profile. A mission phase is only the value explicitly recorded by a user; it is never derived from a timestamp or schedule. Follow-up records are administrative workflow notes, not medical advice or a LIMEN escalation.
+6. **NASA OSDR reference measurement data**: transformed, study-level biospecimen measurements published by NASA OSDR under CC0 1.0. These are reference observations about four Inspiration4 crew members, not telemetry, not LIMEN records, and not joined to any browser assessment, check-in, mission event, or follow-up.
 
 Records are written with duplicate-safe identifiers and can be deleted through the future local-data controls that call the storage deletion functions. Browser IndexedDB is device/browser-profile local: clearing site data, using private browsing, browser policy, storage eviction, or changing devices may remove or isolate records. No astronaut-level raw data is bundled, fetched, or fabricated. Data export, retention, consent, access controls, and operational deployment requirements are outside this prototype phase and require separate governance.
 
@@ -44,3 +46,18 @@ Performance–self-report alignment uses only check-ins that already carry an ex
 Recovery timestamps are rendered in UTC and labelled as such, so a stored record reads identically for every reader regardless of local timezone. Metric values are displayed with the unit stated once per metric instead of being repeated inside each number, which keeps a signed difference from being read as a labelled judgement.
 
 The dashboard resolves a single browser-local participant profile. The established `browser-participant` identifier is preferred; otherwise exactly one profile with completed observations is used. Profiles are never merged, and a check-in-only profile never removes an observation-bearing profile from view. If several observation-bearing profiles exist, the dashboard reports the ambiguity instead of choosing between them, because the prototype provides no multi-participant management. Reference selection, the observation under review, and the focused metric exist only in component state and are never written into historical records.
+
+## Stage 4 provenance
+
+Stage 4 adds a typed domain layer without creating a new source of observational truth.
+
+- **Expanded check-ins** keep the original six self-report items and add `sleepQuality`, `sleepScheduleDisruption`, `workload`, `stress`, `generalWellbeing`, and `existingSymptoms`. Every item declares its polarity; opposite-polarity answers are never averaged. An omitted item remains absent, never zero. A free-text note is optional, trimmed, locally stored, bounded at 1,000 characters, and is not analysed or transmitted. A stored check-in may name an explicit `assessmentSessionId`, `missionContextId`, and `missionPhase`; none is inferred.
+- **Mission contexts and events** are user-entered records with an explicit source and provenance. An event's `occurredAt` is never used to derive its phase. The three legacy phase values (`inflight`, `postflight`, `reconditioning`) remain readable in stored records but are not accepted for new mission-context creation or phase changes.
+- **Signal Concordance** is a pure derived result. It is not persisted, does not create a new observation, and uses only explicitly supplied session and check-in identifiers. It never selects a check-in by timestamp proximity, never pools measurement protocol v0.2.0 with v0.3.0, and never produces a composite, readiness, risk, causal, or predictive statement.
+- **Follow-up records** are user-entered administrative workflow records. A referral is a request that an authorised reviewer consider an observation; `performedByLimen` is always `false`. LIMEN does not diagnose, prescribe, contact a clinician, or transmit records.
+- **Evidence intelligence** keeps five categories structurally distinct: published research findings, NASA study-catalogue metadata, downloadable NASA measurement data, user-generated observations, and synthetic demonstration scenarios. Only a measurement-data record exposes source files. A catalogue record is never presented as a downloadable dataset, and no publication, finding, participant measurement, or availability status is fabricated.
+- **OSDR timelines** are pure access functions over the existing typed datasets. Serum and whole-blood series remain distinct, missing tokens remain missing, and source reference ranges are carried without evaluation. No OSDR measurement is joined to a browser record.
+
+### Persistence provenance
+
+The IndexedDB database `limen-neuroadaptive` is upgraded additively from version 1 to version 2. The original `assessment-sessions` and `sensorimotor-checkins` stores are preserved unchanged; `mission-contexts`, `mission-events`, and `follow-up-records` are created only if missing. No store is deleted or recreated. Inserts are duplicate-safe, and updates use explicit `replace*` functions after domain validation. Simulated-demo records are rejected by real stores. There is no backend, account, network service, or cross-device synchronization; records remain local to the browser profile and are subject to its storage policy and eviction.

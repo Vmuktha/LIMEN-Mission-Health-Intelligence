@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedBy": "scripts/build-osdr-data.ts",
+  "sourceDirectory": "data/raw/osdr",
+  "datasets": [
+    {
+      "datasetId": "osd-575-cmp",
+      "studyAccession": "OSD-575",
+      "specimen": "serum",
+      "fileName": "LSDS-8_Comprehensive_Metabolic_Panel_CMP_TRANSFORMED.csv",
+      "sha256": "5eb1e7f025dd8443a9e70111e62bc32afae3432753024489c5c013e401d709d9",
+      "byteSize": 8506,
+      "sampleCount": 28,
+      "analyteCount": 19,
+      "measurementCount": 532,
+      "processedFile": "data/processed/osdr/osd-575-cmp.json",
+      "issueCount": 1,
+      "errorCount": 0
+    },
+    {
+      "datasetId": "osd-575-cardiovascular",
+      "studyAccession": "OSD-575",
+      "specimen": "serum",
+      "fileName": "LSDS-8_Multiplex_serum_cardiovascular_EvePanel_TRANSFORMED.csv",
+      "sha256": "fdba6c3ce45401c12ca9b699fa375303793959aa0391e2f3c722f354d9cfc75c",
+      "byteSize": 6207,
+      "sampleCount": 28,
+      "analyteCount": 9,
+      "measurementCount": 504,
+      "processedFile": "data/processed/osdr/osd-575-cardiovascular.json",
+      "issueCount": 1,
+      "errorCount": 0
+    },
+    {
+      "datasetId": "osd-569-cbc",
+      "studyAccession": "OSD-569",
+      "specimen": "whole-blood",
+      "fileName": "LSDS-7_Complete_Blood_Count_CBC_TRANSFORMED.csv",
+      "sha256": "32e4f9c97d3b636b5d5c2e72dab8c4d3319dee64c437508b092dad04603b2b8f",
+      "byteSize": 9317,
+      "sampleCount": 28,
+      "analyteCount": 20,
+      "measurementCount": 560,
+      "processedFile": "data/processed/osdr/osd-569-cbc.json",
+      "issueCount": 0,
+      "errorCount": 0
+    }
+  ]
+}
