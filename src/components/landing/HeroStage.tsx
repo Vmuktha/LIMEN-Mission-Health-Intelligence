@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRef, type PointerEvent } from "react";
 import { SceneCanvas, useScene } from "@/components/scene";
-import { OrbitalHorizon } from "./OrbitalHorizon";
 import { SignalFilaments } from "./SignalFilaments";
 
 /**
@@ -46,13 +45,18 @@ export function HeroStage() {
                 "radial-gradient(70% 55% at 78% 78%, color-mix(in oklab, var(--limen-ion) 10%, transparent) 0%, transparent 62%), linear-gradient(180deg, var(--limen-void) 0%, color-mix(in oklab, var(--limen-hull) 60%, var(--limen-void)) 58%, var(--limen-void) 100%)",
             }}
           />
+          <div className="limen-starfield absolute inset-0" />
 
         <div
           className="absolute inset-0 transition-transform duration-700 ease-linen will-change-transform"
           style={{ transform: "translate3d(calc(var(--limen-pointer-x, 0) * -12px), calc(var(--limen-pointer-y, 0) * -7px), 0)" }}
         >
-          <OrbitalHorizon placement="frame" className="absolute inset-0 hidden h-full w-full md:block" />
-          <OrbitalHorizon placement="below" className="absolute inset-0 h-full w-full md:hidden" />
+          <div className="limen-earth-fallback" aria-hidden="true">
+            <div className="limen-earth-fallback__surface" />
+            <div className="limen-earth-fallback__clouds" />
+            <div className="limen-earth-fallback__terminator" />
+            <div className="limen-earth-fallback__atmosphere" />
+          </div>
         </div>
 
         <div
@@ -90,25 +94,26 @@ export function HeroStage() {
       <div className="relative z-10 mx-auto flex w-full max-w-[1180px] flex-1 flex-col justify-between px-6 pb-14 pt-16 md:px-10 md:pb-16 md:pt-20 lg:px-14 lg:pb-20 lg:pt-24">
         <p className="flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.28em] text-ion">
           <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-ion shadow-[0_0_12px_var(--limen-ion)]" />
-          Neuroadaptive research prototype
+          LIMEN · Mission Health Intelligence
         </p>
 
         <div className="grid gap-10 lg:grid-cols-[minmax(0,42rem)_auto] lg:items-end lg:justify-between lg:gap-16">
           <div className="max-w-2xl">
             <h1 id="landing-hero-title" className="text-display-xl font-semibold tracking-tight text-glow">
-              Between worlds, the body re-learns a gravity.
+              A clearer picture of human performance, between worlds.
             </h1>
             <p className="mt-6 max-w-xl text-base leading-8 text-glow-muted">
-              LIMEN studies how sensorimotor behaviour adapts when the environment changes — and how a person compares
-              today with their own earlier self.
+              LIMEN — Mission Health Intelligence — connects crew context, self-reported observations, visuomotor
+              performance and longitudinal change across mission transitions. A research prototype, built for careful
+              observation rather than diagnosis.
             </p>
 
             <div className="mt-9 flex flex-wrap items-center gap-3">
               <Link
-                href="/mission"
+                href="/mission/contexts"
                 className="group inline-flex items-center gap-2 rounded-control bg-ion px-5 py-3 text-sm font-semibold text-void transition-colors duration-fast ease-linen hover:bg-ion-soft"
               >
-                Enter the mission module
+                Explore mission context
                 <span aria-hidden="true" className="transition-transform duration-fast ease-linen group-hover:translate-x-1">→</span>
               </Link>
               <Link
@@ -116,6 +121,12 @@ export function HeroStage() {
                 className="inline-flex items-center gap-2 rounded-control border border-horizon/80 px-5 py-3 text-sm font-medium text-glow-muted transition-colors duration-fast ease-linen hover:border-ion/60 hover:text-glow"
               >
                 Run the assessment
+              </Link>
+              <Link
+                href="/concordance"
+                className="inline-flex items-center gap-2 rounded-control border border-horizon/80 px-5 py-3 text-sm font-medium text-glow-muted transition-colors duration-fast ease-linen hover:border-ion/60 hover:text-glow"
+              >
+                Signal Concordance
               </Link>
             </div>
 

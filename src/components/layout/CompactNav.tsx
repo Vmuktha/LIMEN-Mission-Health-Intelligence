@@ -13,10 +13,10 @@ export function CompactNav() {
   const pathname = usePathname();
 
   return (
-    <nav aria-label="Primary" className="relative border-t border-horizon/50 bg-hull/40 lg:hidden">
-      <ul className="mx-auto flex max-w-[1680px] items-stretch gap-0.5 px-2 py-1.5 md:justify-between md:gap-2 md:px-6">
+    <nav aria-label="Primary" className="relative overflow-x-auto overscroll-x-contain border-t border-horizon/50 bg-hull/40 lg:hidden">
+      <ul className="mx-auto flex w-max min-w-full max-w-[1680px] items-stretch gap-0.5 px-2 py-1.5 md:justify-between md:gap-2 md:px-6">
         {NAV_ITEMS.map((item) => (
-          <li key={item.href} className="min-w-0 md:shrink">
+          <li key={item.href} className="shrink-0">
             <NavLinkItem item={item} active={isActiveRoute(pathname, item.href)} variant="compact" />
           </li>
         ))}

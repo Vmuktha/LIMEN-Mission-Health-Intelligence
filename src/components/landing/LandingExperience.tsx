@@ -28,7 +28,41 @@ export function LandingExperience() {
     <div ref={revealRef} className="relative bg-void">
       <HeroStage />
 
-      <StorySection id="landing-problem" index="01" eyebrow="The problem" title="When gravity changes, the map stops matching.">
+      <StorySection id="landing-system" index="01" eyebrow="The instrument" title="One mission. Several kinds of evidence." tone="hull">
+        <p>
+          Mission health is not a single number. LIMEN keeps mission context, a person&apos;s own observations,
+          task-based behaviour and retrospective research evidence distinct, so each can be read for what it is.
+          These are connected product pathways—not a claim of integrated or real-time astronaut monitoring.
+        </p>
+        <ul className="grid gap-4 sm:grid-cols-2">
+          {[
+            { href: "/mission/contexts", title: "Mission context", detail: "Describe a mission phase and its gravity-transition setting." },
+            { href: "/check-in", title: "Crew check-ins", detail: "Capture subjective, self-reported observations." },
+            { href: "/assessment", title: "Visuomotor performance", detail: "Run a short browser-based adaptation task." },
+            { href: "/recovery", title: "Longitudinal reference", detail: "Review observations against the same person’s eligible reference session." },
+            { href: "/concordance", title: "Signal Concordance", detail: "Read available task and check-in records together, without a composite score." },
+            { href: "/evidence/osdr", title: "Retrospective evidence", detail: "Explore selected NASA OSDR research data; not live mission telemetry." },
+            { href: "/mission/transitions", title: "Transitions & follow-up", detail: "Review recorded transitions. A dedicated follow-up experience is not yet available." },
+            { href: "/privacy", title: "Privacy & local data", detail: "Review the prototype’s browser-local data and deletion controls." },
+          ].map((item) => (
+            <li key={item.href}>
+              <Link href={item.href} className="group block border-t border-horizon/60 py-4 focus-visible:rounded-control">
+                <span className="flex items-center justify-between gap-3 text-sm font-semibold text-glow transition-colors group-hover:text-ion">
+                  {item.title}
+                  <span aria-hidden="true" className="text-ion/70">↗</span>
+                </span>
+                <span className="mt-2 block text-sm leading-6 text-glow-muted">{item.detail}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+        <p className="text-xs leading-6 text-glow-muted">
+          NASA imagery and retrospective data are identified at their source. NASA does not endorse LIMEN;
+          the prototype has no astronaut-level telemetry, neural measurement, clinical validation or diagnostic capability.
+        </p>
+      </StorySection>
+
+      <StorySection id="landing-problem" index="02" eyebrow="The problem" title="When gravity changes, the map stops matching.">
         <p>
           On Earth, the eye–hand map you calibrated is invisible: you reach, and the world is where you expect it.
           Change the gravity and that mapping stops holding. Tasks that were automatic become effortful, and the
@@ -44,7 +78,7 @@ export function LandingExperience() {
         </p>
       </StorySection>
 
-      <StorySection id="landing-measure" index="02" eyebrow="The instrument" title="A shortened browser task, and the behaviour it leaves behind." tone="hull">
+      <StorySection id="landing-measure" index="03" eyebrow="The instrument" title="A shortened browser task, and the behaviour it leaves behind." tone="hull">
         <p>
           The prototype rotates visual feedback by 45° during the adaptation phases and records pointer paths and
           timing across four phases — baseline, adaptation, late adaptation and washout. From the raw trials it
@@ -64,7 +98,7 @@ export function LandingExperience() {
         </dl>
       </StorySection>
 
-      <StorySection id="landing-limits" index="03" eyebrow="The limits" title="What this prototype cannot tell you.">
+      <StorySection id="landing-limits" index="04" eyebrow="The limits" title="What this prototype cannot tell you.">
         <ul className="space-y-4">
           {[
             "No neural or vestibular measurement. The task records pointer behaviour; nothing here infers brain activity.",
@@ -88,15 +122,16 @@ export function LandingExperience() {
             Begin with the framing, then take the measurement.
           </h2>
           <p className="mt-5 max-w-2xl text-[15px] leading-8 text-glow-muted">
-            The mission module explains why sensorimotor adaptation matters in altered gravity. The assessment then
-            records one browser-local session, and the recovery module compares it with your own earlier sessions.
+            Mission context, self-reports, browser-based performance and longitudinal review each have their own
+            limits and provenance. The assessment records one browser-local session; recovery compares it only with
+            compatible observations from the same profile.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
-              href="/mission"
+              href="/mission/contexts"
               className="group inline-flex items-center gap-2 rounded-control bg-ion px-5 py-3 text-sm font-semibold text-void transition-colors duration-fast ease-linen hover:bg-ion-soft"
             >
-              Enter the mission module
+              Explore mission context
               <span aria-hidden="true" className="transition-transform duration-fast ease-linen group-hover:translate-x-1">→</span>
             </Link>
             <Link
@@ -111,8 +146,11 @@ export function LandingExperience() {
 
       <footer className="border-t border-horizon/50 bg-void px-6 py-10 md:px-10 lg:px-14">
         <div className="mx-auto flex w-full max-w-[1180px] flex-wrap items-center justify-between gap-4 text-xs text-glow-muted">
-          <p>LIMEN · neuroadaptive mission readiness &amp; recovery intelligence · research prototype</p>
+          <p>LIMEN · Mission Health Intelligence · research prototype</p>
           <p>Browser-local records · descriptive only · not a diagnostic or fitness-for-duty system</p>
+          <p className="basis-full border-t border-horizon/40 pt-4 leading-6">
+            Earth surface and cloud textures: <a className="underline decoration-ion/50 underline-offset-4 hover:text-glow" href="https://visibleearth.nasa.gov/collection/1484/blue-marble" target="_blank" rel="noreferrer">NASA Blue Marble imagery</a> (NASA/GSFC; public domain). NASA does not endorse LIMEN.
+          </p>
         </div>
       </footer>
     </div>

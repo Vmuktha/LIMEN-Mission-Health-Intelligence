@@ -26,7 +26,7 @@ export function Topbar() {
           <span className="flex flex-col leading-none">
             <span className="text-sm font-semibold tracking-[0.32em] text-glow">LIMEN</span>
             <span className="mt-1.5 hidden text-[10px] font-medium uppercase tracking-[0.18em] text-glow-muted lg:block">
-              Neuroadaptive readiness &amp; recovery intelligence
+              Mission health intelligence · research prototype
             </span>
           </span>
         </Link>

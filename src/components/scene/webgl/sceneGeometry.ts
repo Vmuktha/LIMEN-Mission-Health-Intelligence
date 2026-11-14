@@ -27,6 +27,8 @@ export function readScenePalette(): {
   readonly ionSoft: string;
   readonly plasma: string;
   readonly plasmaBright: string;
+  readonly earthNight: string;
+  readonly cloud: string;
 } {
   const styles = typeof document === "undefined" ? null : getComputedStyle(document.documentElement);
   const read = (name: string, fallback: string) => styles?.getPropertyValue(name).trim() || fallback;
@@ -38,12 +40,14 @@ export function readScenePalette(): {
     ionSoft: read("--limen-ion-soft", "#67e8f9"),
     plasma: read("--limen-plasma", "#a78bfa"),
     plasmaBright: read("--limen-plasma-bright", "#e879f9"),
+    earthNight: read("--limen-earth-night", "#152132"),
+    cloud: read("--limen-cloud", "#c7e0f5"),
   };
 }
 
 export const PLANET = {
-  centre: { x: 2.6, y: -7.6, z: -2 } as SceneVector3,
-  radius: 8,
+  centre: { x: 2.15, y: 0.18, z: -0.55 } as SceneVector3,
+  radius: 2.05,
 } as const;
 
 /** A small, fast, seeded generator: identical geometry on every load. */

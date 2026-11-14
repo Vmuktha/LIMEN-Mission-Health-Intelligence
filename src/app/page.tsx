@@ -3,9 +3,9 @@ import { AppShell } from "@/components/layout/AppShell";
 import { LandingExperience } from "@/components/landing/LandingExperience";
 
 export const metadata: Metadata = {
-  title: "Between worlds",
+  title: "Mission Health Intelligence",
   description:
-    "LIMEN is a browser-local research prototype for studying how sensorimotor behaviour adapts when the environment changes. Descriptive measurements only.",
+    "LIMEN connects crew context, self-reported observations, visuomotor adaptation and retrospective research evidence in a mission-aware, browser-local prototype. Descriptive only; not a diagnostic system.",
 };
 
 export default function Home() {

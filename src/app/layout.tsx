@@ -16,19 +16,19 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "LIMEN | Neuroadaptive Mission Readiness & Recovery Intelligence",
+    default: "LIMEN | Mission Health Intelligence",
     template: "%s | LIMEN",
   },
   description:
-    "LIMEN is a browser-local research prototype for studying sensorimotor adaptation across altered-gravity transitions. It is not a clinical diagnostic tool, does not measure brain activity, and is not endorsed by NASA or any other organisation.",
+    "LIMEN is a mission health intelligence research prototype connecting mission context, self-reported observations, visuomotor performance and retrospective evidence. Descriptive only; not a diagnostic or NASA-endorsed system.",
   applicationName: "LIMEN",
   category: "science",
   openGraph: {
     type: "website",
     siteName: "LIMEN",
-    title: "LIMEN | Neuroadaptive Mission Readiness & Recovery Intelligence",
+    title: "LIMEN | Mission Health Intelligence",
     description:
-      "A browser-local research prototype for studying sensorimotor adaptation and readaptation across gravity transitions.",
+      "A browser-local research prototype connecting mission context, self-reported observations, visuomotor performance and retrospective biological evidence across mission transitions.",
   },
 };
 
