@@ -1,179 +1,242 @@
 # LIMEN
+### Neuroadaptive Mission Readiness & Recovery Intelligence
 
-**Neuroadaptive Mission Readiness & Recovery Intelligence**
+**Understanding how humans adapt, perform, and readapt across gravity transitions in spaceflight.**
 
-LIMEN is a scientific software prototype for exploring sensorimotor adaptation and readaptation across gravity-transition contexts in human spaceflight. It combines a browser-based visuomotor adaptation task, optional subjective self-reports, mission-context records, descriptive within-person recovery analytics, a registry of published research, and bundled retrospective NASA Open Science Data Repository (OSDR) biospecimen data.
+LIMEN is a scientific software prototype exploring sensorimotor adaptation and recovery in human spaceflight. It brings together a browser-based visuomotor assessment, subjective crew check-ins, longitudinal recovery analytics, scientific research, and real historical biospecimen data from NASA's Open Science Data Repository (OSDR).
 
-LIMEN is a research and demonstration prototype prepared for NASA Space Apps exploration. It is **not** a clinical diagnostic product, a medical device, an operational monitoring system, or a NASA-endorsed system. All outputs are descriptive.
+The project explores how behavioural measurements, self-reported observations, mission context, and published spaceflight research can be brought together into a transparent research environment.
 
-## Implemented application
+> LIMEN is a research and demonstration prototype. It is not a medical device, clinical diagnostic system, operational astronaut-monitoring platform, or NASA-endorsed product.
 
-All routes live under `src/app` (Next.js App Router). Operational routes read and write only browser-local IndexedDB records; nothing is sent to a server.
+---
 
-### Landing experience — `/`
+## At a glance
 
-`src/components/landing/LandingExperience.tsx` composes:
+| | |
+|---|---|
+| **Domain** | Human spaceflight, sensorimotor adaptation, recovery intelligence |
+| **Platform** | Web application |
+| **Framework** | Next.js, React, TypeScript |
+| **Scientific data** | NASA OSDR: OSD-575 and OSD-569 |
+| **Data approach** | Retrospective real measurements, browser-generated observations, and isolated fictional simulations |
+| **Persistence** | Browser-local IndexedDB |
+| **Visualisation** | Three.js, React Three Fiber, SVG |
 
-- **Hero stage** (`HeroStage.tsx`) with a WebGL scene (`src/components/scene/webgl/*`, built with Three.js and React Three Fiber) loaded through a deferred dynamic import in `SceneCanvas.tsx`. The neural filaments are a visual metaphor, not measured neural activity.
-- **Mission brief** (`src/components/mission/MissionBrief.tsx`).
-- Four numbered story sections: the instrument and its kinds of evidence, the gravity-transition problem, the shortened browser task, and the prototype's limits.
-- **Beyond the Horizon** — a NASA inspiration carousel (`BeyondHorizonCarousel.tsx`). At runtime it queries the public NASA Image and Video Library search API (`https://images-api.nasa.gov/search`) via SWR for four fixed NASA IDs (Apollo 11 `as11-40-5874`, Voyager `PIA23645`, Perseverance `PIA23722`, James Webb `PIA26703`) and shows each image with its NASA title, description, credit taken from the NASA metadata, and source link. It auto-rotates every 5.6 s, pauses on hover or keyboard focus, has pause/play and previous/next controls, does not auto-rotate under `prefers-reduced-motion`, and shows an explicit unavailable state when the NASA API cannot be reached. The carousel is decorative context only and is unrelated to the OSDR measurements.
+## Explore LIMEN
 
-### Operate
+LIMEN is organised around four connected experiences.
 
-- **`/assessment` — Sensorimotor assessment.** A guided browser visuomotor adaptation task: research briefing, optional pre-assessment self-report, task preparation, four balanced protocol phases (16 baseline, 32 adaptation, 16 late adaptation, 16 washout trials) with a 45° clockwise displayed-cursor rotation during rotated phases, optional post-assessment self-report, and a descriptive results summary. Only fully completed browser-generated sessions are saved locally.
-- **`/check-in` — Crew check-in.** Six subjective 0–10 scales plus a free-text note. Unanswered items are stored as missing, never as zero.
+### 1. Assess — Browser-based sensorimotor assessment
 
-### Context
+The assessment module implements a structured visuomotor adaptation task.
 
-- `/mission` (mission overview), `/mission/contexts`, `/mission/events`, and `/mission/transitions` — browser-local mission-context, event, and gravity-transition records.
+Participants complete four phases:
 
-### Analyse
+- Baseline
+- Adaptation
+- Late adaptation
+- Washout
 
-- **`/recovery` — Recovery & reference.** A browser-local descriptive dashboard: data overview, Personal Reference Session control, eight separate metric cards (reaction time, movement time, directional error, trajectory deviation, correction count, peak-velocity time, adaptation change, washout aftereffect), protocol-separated longitudinal trends in inline SVG, check-in history, explicit performance–self-report alignment, and data-quality transparency. There is no composite score.
-- **`/personal-trends`** — chronological performance and self-reported observations.
-- **`/concordance`** — Signal Concordance: side-by-side comparison of available behavioural and self-reported observations.
-- **`/observations`** — versioned descriptive notices linked to browser-local records.
-- **`/privacy`** — local-data controls and deletion scope.
+During rotated phases, the displayed cursor is rotated 45° clockwise relative to the actual pointer movement. LIMEN records the movement and feedback paths separately, allowing descriptive behavioural measurements to be calculated.
 
-### Research & evidence
+The task also supports optional pre- and post-assessment self-reports and saves completed sessions locally in the browser.
 
-- **`/evidence` — Scientific evidence.** A source-linked registry (`src/lib/evidence/studies.ts`) of published research and standards, including work by Clément et al., Tays et al., Hupfeld et al., and NASA standards documents. These references are not LIMEN records and are not a validation claim for this prototype. See [`docs/SCIENTIFIC_EVIDENCE.md`](docs/SCIENTIFIC_EVIDENCE.md).
-- **`/evidence/methodology` — Scientific methodology.** Task protocol, metric eligibility, and evidence boundaries.
-- **`/evidence/osdr` — NASA OSDR explorer.** Explorer for the three bundled, processed OSDR datasets (see below). The user selects one dataset, then an analyte, a pseudonymous sample token (`C001`–`C004`), and optionally a timepoint. It renders a per-token inline SVG series in source timepoint order, where absent measurements break the line, plus a table of the original sample IDs, timepoints, units, values, and missing-value tokens. Datasets, studies, and specimens are never merged in the UI.
+### 2. Analyse — Recovery and personal reference
 
-### Mission simulation lab — `/simulation`
+The recovery module organises completed assessment sessions into chronological observations.
 
-An isolated, fictional demonstration workspace (`src/components/simulation/*`, `src/lib/simulation/*`). The entry page shows two synthetic astronaut profiles — Dr. Mara Venn (Aster-1) and Dr. Clara Reyes (Aurora-2) — built from deterministic, seeded fixtures labelled `fictional-demonstration-not-real-telemetry`. Mirror routes exist for each operational view: `/simulation/mission`, `/simulation/timeline`, `/simulation/contexts`, `/simulation/events`, `/simulation/transitions`, `/simulation/assessments`, `/simulation/check-ins`, `/simulation/recovery`, `/simulation/trends`, `/simulation/concordance`, `/simulation/observations`, `/simulation/evidence`, `/simulation/osdr`, and `/simulation/methodology`. Simulation records never read or modify the user's browser-local records, and no fictional profile is associated with OSDR data. Fixture portraits are in `public/images/simulation/`.
+It provides:
 
-## NASA OSDR integration
+- Eight separate behavioural metrics
+- Personal Reference Session selection
+- Protocol-aware comparisons
+- Longitudinal trends
+- Subjective check-in history
+- Performance and self-report alignment
+- Data-quality explanations
 
-LIMEN uses transformed tabular files from two NASA OSDR SpaceX Inspiration4 (16–18 September 2021) biospecimen studies. [`docs/NASA_DATA_AUDIT.md`](docs/NASA_DATA_AUDIT.md) is the authoritative audit of these files.
+Metrics remain separate rather than being collapsed into an unsupported overall readiness score.
 
-| | OSD-575 | OSD-569 |
-|---|---|---|
-| Title | SpaceX Inspiration4 Blood Serum Metabolic Panel and Immune/Cardiac Cytokine Arrays (Comprehensive Metabolic Panel and Multiplex) | Whole Blood Measurements from the SpaceX Inspiration4 Mission (RNA-seq, epitranscriptome, WGS, clonal hematopoiesis, CBC) |
-| OSDR record | https://osdr.nasa.gov/bio/repo/data/studies/OSD-575 | https://osdr.nasa.gov/bio/repo/data/studies/OSD-569 |
-| DOI | [10.26030/mc5d-p710](https://doi.org/10.26030/mc5d-p710) | [10.26030/e0rx-sh52](https://doi.org/10.26030/e0rx-sh52) |
-| Participants | 4 (pseudonymous `C001`–`C004`) | 4 (pseudonymous `C001`–`C004`) |
+### 3. Investigate — Scientific evidence and NASA OSDR
 
-### Downloaded versus processed
+LIMEN includes a research registry and an interactive explorer for historical NASA biospecimen measurements.
 
-Seven files are tracked under `data/raw/osdr/`: five transformed CSVs and two ISA metadata ZIPs. **Only three datasets are processed and used by the application:**
+The OSDR explorer allows users to select a dataset, analyte, participant token, and timepoint, then inspect the available measurements through charts and tables.
 
-| Dataset ID | Study | Specimen | Source file | Samples | Analytes | Measurement records |
-|---|---|---|---|---|---|---|
-| `osd-575-cmp` | OSD-575 | serum | `LSDS-8_Comprehensive_Metabolic_Panel_CMP_TRANSFORMED.csv` | 28 | 19 | 532 |
-| `osd-575-cardiovascular` | OSD-575 | serum | `LSDS-8_Multiplex_serum_cardiovascular_EvePanel_TRANSFORMED.csv` | 28 | 9 | 504 |
-| `osd-569-cbc` | OSD-569 | whole blood | `LSDS-7_Complete_Blood_Count_CBC_TRANSFORMED.csv` | 28 | 20 | 560 |
+The application includes three processed datasets from two SpaceX Inspiration4 studies:
 
-The cardiovascular panel emits both a concentration and a vendor-normalized `percent` value per analyte (2 × 9 = 18 records per sample). Vendor `percent` values are stored with `unit: null` and no inferred formula.
+| NASA study | Dataset | Measurement records |
+|---|---|---:|
+| OSD-575 | Comprehensive Metabolic Panel (CMP) | 532 |
+| OSD-575 | Cardiovascular 9-plex | 504 |
+| OSD-569 | Complete Blood Count (CBC) | 560 |
+| **Total** | | **1,596** |
 
-Two downloaded files are deliberately **archived and not processed** (`OSDR_ARCHIVED_SOURCES` in `src/lib/osdr/definitions.ts`): the 71-plex Eve immune panel (`LSDS-8_Multiplex_serum_immune_EvePanel_TRANSFORMED.csv`) and the 203-analyte Alamar NULISA panel (`LSDS-8_Multiplex_serum.immune.AlamarPanel_TRANSFORMED.csv`). The ISA metadata ZIPs are retained for provenance and are not parsed by the build.
+These are measurement records, not individual participants. The underlying studies contain four pseudonymised participants.
 
-### Processing pipeline
+### 4. Simulate — Mission simulation environment
 
-`scripts/build-osdr-data.ts` drives a pure, deterministic pipeline in `src/lib/osdr/`:
+The simulation lab provides an isolated demonstration environment with fictional astronaut profiles and deterministic sample scenarios.
 
-1. `definitions.ts` — closed definitions of the three processed datasets (study metadata, paths, documented timepoints) and the archived sources.
-2. `csv.ts` — CSV parsing of the unmodified UTF-8 (BOM) source bytes.
-3. `columns.ts` — closed header patterns that classify every measurement column (value, `range_min`, `range_max`, vendor-normalized), including the explicit alias for the CMP `alt_max_*` / `ast_max_*` headers. An unknown suffix is an error, not a guess.
-4. `build.ts` — converts wide rows into long-format measurement records, preserving original sample IDs, source unit tokens, and the original missing-value tokens (`NA`, `N/A`, empty). Missing values are never converted to zero.
-5. Validation — any dataset with an error-severity issue aborts the build and nothing is written. The `R+194` timepoint, present in the OSD-575 files but absent from the OSD-575 description, is reported as a `timepoint-not-documented` warning and the dataset is still published.
-6. Output — one JSON file per dataset plus `manifest.json` recording each source file's SHA-256, byte size, and sample, analyte, measurement, and issue counts.
+It allows users to explore the application's operational views without confusing synthetic records with real NASA measurements or personal browser data.
 
-Supporting modules: `processed.ts` (runtime imports), `chart.ts` (explorer series), `timeline.ts` (timepoint ordering), and `association.ts` (a tentative `(participant token, timepoint)` cross-study association that is explicitly marked `participantIdentityVerified: false`; it is covered by tests and is not used by the explorer UI).
+All simulation profiles and telemetry-like values are fictional.
 
-## Data architecture
+---
 
-| Layer | Location | Role |
-|---|---|---|
-| Raw source files (tracked) | `data/raw/osdr/OSD-575/`, `data/raw/osdr/OSD-569/` | Unmodified OSDR downloads with original filenames. Never edited. |
-| Processed data (tracked, generated) | `data/processed/osdr/osd-575-cmp.json`, `osd-575-cardiovascular.json`, `osd-569-cbc.json`, `manifest.json` | Deterministic output of the build script. Do not edit by hand. |
-| Runtime imports | `src/lib/osdr/processed.ts` | Statically imports the three processed JSON files at build time as `OSDR_DATASETS`. The browser performs no network request and no CSV parsing for OSDR data. |
-| Browser-local records | IndexedDB (`src/lib/storage/*`) | Assessment sessions, check-ins, mission contexts, events, transitions, and follow-ups stay in the current browser profile. |
-| Simulation fixtures | `src/lib/simulation/*` | Deterministic fictional scenarios isolated from all real and browser-local records. |
+## Beyond the Horizon
 
-Regenerate the processed OSDR data from the raw files with:
+The LIMEN landing experience includes a NASA-inspired visual journey, combining a WebGL environment with the Beyond the Horizon image carousel.
+
+The carousel retrieves selected imagery from NASA's public Image and Video Library API and displays the associated titles, descriptions, credits, and source links.
+
+The landing environment uses Three.js and React Three Fiber. Its visual elements are conceptual representations, not measurements of neural activity or astronaut telemetry.
+
+---
+
+## NASA data integration
+
+LIMEN uses transformed tabular data from two NASA Open Science Data Repository studies associated with the SpaceX Inspiration4 mission (16–18 September 2021).
+
+**Studies**
+
+- [OSD-575 — Blood Serum Metabolic Panel and Immune/Cardiac Cytokine Arrays](https://osdr.nasa.gov/bio/repo/data/studies/OSD-575)  
+  DOI: [10.26030/mc5d-p710](https://doi.org/10.26030/mc5d-p710)
+
+- [OSD-569 — Whole Blood Measurements from the SpaceX Inspiration4 Mission](https://osdr.nasa.gov/bio/repo/data/studies/OSD-569)  
+  DOI: [10.26030/e0rx-sh52](https://doi.org/10.26030/e0rx-sh52)
+
+Seven source files are preserved in the repository: five transformed CSV files and two ISA metadata archives.
+
+Three datasets are currently processed and bundled into the application. The 71-plex immune panel and 203-analyte Alamar panel are retained as archived sources and are not part of the current explorer.
+
+### Data processing
+
+The OSDR pipeline:
+
+1. Reads the original transformed CSV files.
+2. Classifies measurement and reference-range columns.
+3. Converts wide-format source tables into structured measurement records.
+4. Preserves sample identifiers, units, and missing-value information.
+5. Validates the generated records and reports data-quality issues.
+6. Produces deterministic JSON datasets and a provenance manifest containing source checksums.
+
+The processed JSON files are committed to the repository and statically imported by the application. The browser does not need to download or parse the original CSV files to use the explorer.
+
+Regenerate the processed data with:
 
 ```bash
 npm run data:build
 ```
 
-This compiles `scripts/` and `src/` with `tsconfig.scripts.json` into `.data-build/` (gitignored) and runs `node .data-build/scripts/build-osdr-data.js` from the repository root. Rebuilding the same source bytes produces byte-identical JSON; the test suite asserts both determinism and agreement with the committed processed files.
+For detailed acquisition records, schema information, checksums, and validation findings, see [`docs/NASA_DATA_AUDIT.md`](docs/NASA_DATA_AUDIT.md).
 
-## Technology stack
+---
 
-- **Next.js 16** (App Router, Turbopack, `cacheComponents` enabled) with **React 19** and **TypeScript 5**
-- **Tailwind CSS 4** via `@tailwindcss/turbopack`
-- **Three.js** and **React Three Fiber** for the landing WebGL scene
-- **SWR** for the Beyond the Horizon NASA Image and Video Library fetch
-- **Geist** and **Geist Mono** via `next/font/google`
-- **Browser IndexedDB** for local prototype persistence
-- **Inline SVG** for recovery, trend, and OSDR charts (no charting library)
-- **ESLint 9** with `eslint-config-next`
-- **Node's built-in test runner** (`node --test`) over TypeScript compiled with `tsc`
+## Scientific integrity and limitations
 
-No backend, database service, authentication provider, or environment variables are required (see `.env.example`).
+LIMEN deliberately distinguishes real measurements, browser-generated observations, published research, and fictional simulation data.
 
-## Running locally
+Important limitations:
 
-Requires Node.js and npm. The commands below were verified with Node 24.16.0.
+- **Small cohort:** the OSDR datasets represent four participants, not a population-level sample.
+- **Ground collections only:** the seven labelled timepoints are ground-based pre- and post-flight collections. Neither study provides in-flight measurements.
+- **Unverified cross-study identity:** the two studies share pseudonymous participant tokens and timepoint labels, but their sample identifiers differ. These labels do not independently establish participant identity.
+- **Timepoint discrepancy:** R+194 appears in the OSD-575 transformed files but is absent from the study description. LIMEN reports this discrepancy rather than resolving it through assumption.
+- **No causal conclusions:** observed differences cannot be attributed to spaceflight using these datasets alone.
+- **No biomarker–behaviour validation:** the OSDR measurements are not paired with LIMEN's browser-based visuomotor task.
+- **No clinical interpretation:** the system does not diagnose conditions, estimate medical risk, predict readiness, or determine fitness for duty.
+
+All browser-generated behavioural measurements are descriptive prototype outputs. Simulation data is fictional and is never presented as real astronaut telemetry.
+
+Further details: [`docs/LIMITATIONS.md`](docs/LIMITATIONS.md).
+
+---
+
+## Technology
+
+- **Frontend:** Next.js, React, TypeScript
+- **Styling:** Tailwind CSS
+- **3D visualisation:** Three.js, React Three Fiber
+- **Data fetching:** SWR
+- **Persistence:** IndexedDB
+- **Charts:** Inline SVG
+- **Data processing:** TypeScript-based deterministic pipeline
+- **Testing:** Node.js test runner, TypeScript, ESLint
+
+The application does not require a server-side database or backend service for its current functionality. NASA carousel imagery requires an internet connection; the bundled OSDR explorer data does not.
+
+---
+
+## Run locally
+
+### Requirements
+
+- Node.js
+- npm
+
+### Installation
 
 ```bash
-npm install            # install dependencies (package-lock.json is committed)
-npm run dev            # development server at http://localhost:3000
-npm test               # compile tests with tsconfig.tests.json and run node --test
-npm run lint           # ESLint
-npx tsc --noEmit -p tsconfig.json   # TypeScript type check
-npm run data:build     # regenerate data/processed/osdr/ from data/raw/osdr/
-npm run build          # production build
-npm run start          # serve the production build
+git clone https://github.com/Vmukutha/LIMEN-Mission-Health-Intelligence.git
+cd LIMEN-Mission-Health-Intelligence
+npm install
 ```
 
-`npm test` writes to `.test-build/` and `npm run data:build` writes to `.data-build/`; both directories are gitignored.
+### Development
 
-## Browser assessment data
+```bash
+npm run dev
+```
 
-The task area uses CSS-pixel coordinates (+x right, +y down). Before each v0.3.0 trial the participant holds the pointer within 12 CSS pixels of the central marker for 250 ms; that observed position is recorded as the actual start. During rotated phases the displayed cursor is the actual pointer vector rotated 45° clockwise around the actual start. Actual pointer coordinates are retained separately and remain the source for behavioural metrics. Protocol v0.3.0 hides the native pointer during active interaction and labels trials `0.3.0-actual-pointer-origin-hidden-cursor`.
+Open [http://localhost:3000](http://localhost:3000).
 
-Pausing during an active target invalidates that trial. Measurement protocols v0.2.0 and v0.3.0, and legacy origin-unverified records, are never pooled; mixed or unknown protocols withhold the affected comparisons. Derived summaries are recomputed from raw trials at display time and stored records are never rewritten. Full definitions are in [`docs/METRICS_AND_DEFINITIONS.md`](docs/METRICS_AND_DEFINITIONS.md) and [`docs/DATA_PROVENANCE.md`](docs/DATA_PROVENANCE.md).
+### Verification
 
-A Personal Reference Session is an explicit within-person comparison reference, not a clinical baseline. Deltas are `current − reference`, require identical measurement protocol versions, carry no improvement or deterioration label, apply no thresholds, and never interpolate or impute missing values. Check-ins are associated with sessions only through an explicit session identifier, never by timestamp proximity.
+```bash
+npm test
+npm run lint
+npx tsc --noEmit -p tsconfig.json
+npm run data:build
+npm run build
+```
 
-## Scientific limitations
+To serve the production build locally:
 
-**Measurement records are not participants.** The 1,596 OSDR measurement records (532 + 504 + 560) come from **four** people. Each record is one analyte value from one sample at one timepoint. Record counts must never be read as sample size.
+```bash
+npm run start
+```
 
-- **Timepoints:** seven ground collections only — L-92, L-44, L-3, R+1, R+45, R+82, R+194. L-3 is the last preflight sample. `R+194` appears in the OSD-575 data but not in its study description; the discrepancy is recorded, not resolved.
-- **No in-flight data:** neither study contains an in-flight serum or whole-blood measurement. LIMEN makes no in-flight or real-time monitoring claim.
-- **Cross-dataset associations:** OSD-575 (serum) and OSD-569 (whole blood) share pseudonymous tokens and timepoint labels but not sample identifiers. Any link is a metadata-based association, not a verified participant identity.
-- **No causal interpretation:** n = 4, no control group, no randomisation. No observed change can be attributed to spaceflight, and no population-level statement is supported.
-- **No concordance with the LIMEN task:** no paired dataset links OSDR biomarkers to LIMEN visuomotor or self-report data.
-- **No clinical use:** values are not classified against the bundled vendor reference ranges, which are laboratory intervals of unknown population and not astronaut decision limits. LIMEN produces no diagnosis, risk estimate, readiness, fitness-for-duty, or composite health score.
-- **Browser task:** thresholds (12 px tolerance, 250 ms dwell, 3 px movement onset) are deterministic prototype rules, not validated thresholds. Browser measurements are not neural or vestibular measurements.
-- **Simulation:** all simulation data is fictional and is not astronaut telemetry.
+---
 
-See [`docs/LIMITATIONS.md`](docs/LIMITATIONS.md) and sections 9–13 of [`docs/NASA_DATA_AUDIT.md`](docs/NASA_DATA_AUDIT.md).
+## Project documentation
 
-## NASA data and attribution
+Additional technical and scientific documentation is available in [`docs/`](docs/):
 
-The OSDR files were retrieved directly from the OSDR download endpoint (`https://osdr.nasa.gov/geode-py/ws/studies/<OSD-ID>/download?source=datamanager&file=<filename>`) on 2026-11-14. Original filenames are preserved, and SHA-256 checksums are recorded in `docs/NASA_DATA_AUDIT.md` and `data/processed/osdr/manifest.json`.
+- `SCIENTIFIC_EVIDENCE.md` — research and literature references
+- `METRICS_AND_DEFINITIONS.md` — behavioural metric definitions
+- `DATA_PROVENANCE.md` — browser-generated data provenance
+- `NASA_DATA_AUDIT.md` — NASA OSDR data acquisition and validation
+- `LIMITATIONS.md` — scientific and methodological limitations
+- `DESIGN_SYSTEM.md` — interface design system
+- `VISUAL_CHARTER.md` — visual and interaction principles
 
-**Licence:** both DOIs are registered with **Creative Commons Zero v1.0 Universal (CC0 1.0)** rights metadata, per their DataCite registration records. CC0 permits redistribution. Attribution is retained voluntarily because provenance is part of the scientific claim. The OSDR policy pages attempted during the audit returned 404, so the licence is taken from the DOI registrations.
+---
 
-> NASA Open Science Data Repository (OSDR). *SpaceX Inspiration4 Blood Serum Metabolic Panel and Immune/Cardiac Cytokine Arrays (Comprehensive Metabolic Panel and Multiplex)*. OSD-575. DOI: [10.26030/mc5d-p710](https://doi.org/10.26030/mc5d-p710). https://osdr.nasa.gov/bio/repo/data/studies/OSD-575
+## Data attribution
 
-> NASA Open Science Data Repository (OSDR). *Whole Blood Measurements from the SpaceX Inspiration4 Mission (RNA-seq, epitranscriptome, WGS, clonal hematopoiesis, CBC)*. OSD-569. DOI: [10.26030/e0rx-sh52](https://doi.org/10.26030/e0rx-sh52). https://osdr.nasa.gov/bio/repo/data/studies/OSD-569
+NASA Open Science Data Repository (OSDR):
 
-The Beyond the Horizon carousel displays images from the [NASA Image and Video Library](https://images.nasa.gov) at runtime; images are not stored in this repository, and each one is shown with the credit and source link from its NASA metadata.
+- OSD-575, DOI [10.26030/mc5d-p710](https://doi.org/10.26030/mc5d-p710)
+- OSD-569, DOI [10.26030/e0rx-sh52](https://doi.org/10.26030/e0rx-sh52)
 
-NASA does not endorse LIMEN.
+The two dataset DOI registrations specify Creative Commons Zero v1.0 Universal (CC0 1.0). Source provenance and attribution are retained in the repository.
 
-## Documentation
+NASA Image and Video Library imagery is retrieved at runtime. Image credits and source links are displayed using the associated NASA metadata.
 
-`docs/` contains the research charter, core architecture, data model, data provenance, NASA data audit and integration notes, metrics and definitions, limitations, mission context model, follow-up workflow, signal concordance, scientific evidence, NASA Space Apps alignment, design system, and visual charter.
+**NASA does not endorse LIMEN.**
 
-## Tool acknowledgments
+---
 
-The commit at the current branch tip (`feat: add Beyond the Horizon NASA inspiration carousel`) is authored by v0 (`v0 <it+v0agent@vercel.com>`), Vercel's AI assistant. This checkout is shallow, so authorship of earlier history cannot be verified from the repository, and no other AI or tool contributions are documented here.
+*LIMEN — Exploring the boundary between human adaptation, evidence, and spaceflight.*
