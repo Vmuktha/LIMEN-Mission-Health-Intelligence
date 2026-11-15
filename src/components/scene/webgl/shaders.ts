@@ -7,10 +7,12 @@
  */
 
 export const PLANET_VERTEX_SHADER = /* glsl */ `
+  varying vec2 vUv;
   varying vec3 vViewNormal;
   varying vec3 vViewPosition;
 
   void main() {
+    vUv = uv;
     vViewNormal = normalize(normalMatrix * normal);
     vec4 viewPosition = modelViewMatrix * vec4(position, 1.0);
     vViewPosition = viewPosition.xyz;
@@ -19,28 +21,36 @@ export const PLANET_VERTEX_SHADER = /* glsl */ `
 `;
 
 export const PLANET_FRAGMENT_SHADER = /* glsl */ `
+  uniform sampler2D uSurfaceMap;
   uniform vec3 uLightDirection;
-  uniform vec3 uVoid;
-  uniform vec3 uHull;
-  uniform vec3 uIon;
-  uniform vec3 uPlasma;
+  uniform vec3 uNightSide;
+  uniform vec3 uAtmosphere;
 
+  varying vec2 vUv;
   varying vec3 vViewNormal;
   varying vec3 vViewPosition;
 
   void main() {
     vec3 normal = normalize(vViewNormal);
     vec3 view = normalize(-vViewPosition);
-
-    float lambert = max(dot(normal, normalize(uLightDirection)), 0.0);
-    float terminator = smoothstep(0.0, 0.9, lambert);
-    float fresnel = pow(1.0 - clamp(dot(normal, view), 0.0, 1.0), 2.7);
-
-    vec3 body = mix(uVoid, uHull, terminator * 0.5);
-    vec3 atmosphere = mix(uPlasma, uIon, smoothstep(-0.35, 0.75, normal.y));
-    vec3 colour = body + atmosphere * fresnel * 0.72;
-
+    float sunlight = dot(normal, normalize(uLightDirection));
+    float day = smoothstep(-0.16, 0.22, sunlight);
+    vec3 surface = texture2D(uSurfaceMap, vUv).rgb;
+    vec3 colour = mix(surface * uNightSide, surface * (0.86 + 0.14 * max(sunlight, 0.0)), day);
+    float fresnel = pow(1.0 - clamp(dot(normal, view), 0.0, 1.0), 2.4);
+    colour += uAtmosphere * fresnel * (0.16 + 0.24 * day);
     gl_FragColor = vec4(colour, 1.0);
+  }
+`;
+
+export const ATMOSPHERE_FRAGMENT_SHADER = /* glsl */ `
+  uniform vec3 uAtmosphere;
+  varying vec3 vViewNormal;
+  varying vec3 vViewPosition;
+
+  void main() {
+    float rim = pow(1.0 - clamp(dot(normalize(vViewNormal), normalize(-vViewPosition)), 0.0, 1.0), 3.2);
+    gl_FragColor = vec4(uAtmosphere, rim * 0.7);
   }
 `;
 

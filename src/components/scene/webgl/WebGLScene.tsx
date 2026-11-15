@@ -30,10 +30,8 @@ export default function WebGLScene({ onActive, onInactive }: WebGLSceneProps) {
   const quality = useMemo(() => resolveSceneQuality(), []);
 
   useEffect(() => {
-    if (contextLost) return;
-    onActive?.();
-    return () => onInactive?.();
-  }, [contextLost, onActive, onInactive]);
+    if (contextLost) onInactive?.();
+  }, [contextLost, onInactive]);
 
   useEffect(() => {
     const handlePointerMove = (event: PointerEvent) => {
@@ -84,7 +82,7 @@ export default function WebGLScene({ onActive, onInactive }: WebGLSceneProps) {
         canvas.addEventListener("webglcontextlost", handleContextLost);
       }}
     >
-      <SceneContents quality={quality} pointer={pointer} />
+      <SceneContents quality={quality} pointer={pointer} onReady={onActive} />
     </Canvas>
   );
 }
@@ -92,13 +90,15 @@ export default function WebGLScene({ onActive, onInactive }: WebGLSceneProps) {
 function SceneContents({
   quality,
   pointer,
+  onReady,
 }: {
   readonly quality: { readonly particles: number; readonly maxPixelRatio: number; readonly filaments: number };
   readonly pointer: React.RefObject<ScenePointer>;
+  readonly onReady?: () => void;
 }) {
   return (
     <>
-      <PlanetaryHorizon />
+      <PlanetaryHorizon onReady={onReady} />
       <ParticleField count={quality.particles} pixelRatio={quality.maxPixelRatio} />
       <NeuralFilaments count={quality.filaments} />
       <CameraRig pointer={pointer} />

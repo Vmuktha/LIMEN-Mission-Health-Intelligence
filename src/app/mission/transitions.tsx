@@ -1,12 +1,13 @@
 "use client";
 import React, { useEffect, useState } from 'react';
+import useSWR from 'swr';
 import Link from 'next/link';
 import { AppShell } from '@/components/layout/AppShell';
 import { listMissionContexts } from '@/lib/storage/mission-storage';
 import { listMissionTransitions, saveMissionTransition } from '@/lib/storage/transition-storage';
-import type { MissionContext } from '@/types/mission-context';
 import type { MissionTransition } from '@/types/transition';
 import type { MissionPhase } from '@/types/mission';
+import { EmptyState, EventStream, PageHeader, ProvenanceLabel } from '@/components/ui/InstrumentUI';
 
 function generateId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -30,36 +31,34 @@ const CANONICAL_PHASES: readonly MissionPhase[] = [
 ];
 
 export default function MissionTransitionsPage() {
-  const [contexts, setContexts] = useState<readonly MissionContext[]>([]);
-  const [transitions, setTransitions] = useState<readonly MissionTransition[]>([]);
+  const { data: contexts = [], error: contextsError, isLoading: contextsLoading } = useSWR("mission-contexts", async () => {
+    const result = await listMissionContexts();
+    if (!result.ok) throw new Error(result.error.message);
+    return result.value;
+  });
+  const { data: transitions = [], error: transitionsError, isLoading: transitionsLoading, mutate: mutateTransitions } = useSWR("mission-transitions", async () => {
+    const result = await listMissionTransitions();
+    if (!result.ok) throw new Error(result.error.message);
+    return result.value;
+  });
   const [selectedContextId, setSelectedContextId] = useState('');
-  const [previousPhase, setPreviousPhase] = useState<MissionPhase>('preflight');
-  const [currentPhase, setCurrentPhase] = useState<MissionPhase>('launch');
+  const [previousPhase, setPreviousPhase] = useState<MissionPhase | null>(null);
+  const [currentPhase, setCurrentPhase] = useState<MissionPhase | null>(null);
   const [prevCustomLabel, setPrevCustomLabel] = useState('');
   const [currCustomLabel, setCurrCustomLabel] = useState('');
-  const [occurredAt, setOccurredAt] = useState(() => new Date().toISOString().slice(0, 16));
+  const [occurredAt, setOccurredAt] = useState("");
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setOccurredAt(new Date().toISOString().slice(0, 16)), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
   const [note, setNote] = useState('');
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  useEffect(() => {
-    listMissionContexts().then((res) => {
-      if (res.ok) {
-        setContexts(res.value);
-        if (res.value.length > 0) {
-          setSelectedContextId(res.value[0].id);
-          setPreviousPhase(res.value[0].phase);
-          const next = CANONICAL_PHASES.find((p) => p !== res.value[0].phase) ?? 'launch';
-          setCurrentPhase(next);
-        }
-      }
-    });
-    listMissionTransitions().then((res) => {
-      if (res.ok) setTransitions(res.value);
-    });
-  }, []);
-
-  const activeContext = contexts.find((c) => c.id === selectedContextId) ?? null;
+  const activeContext = contexts.find((context) => context.id === selectedContextId) ?? contexts[0] ?? null;
+  const previousPhaseValue = previousPhase ?? activeContext?.phase ?? "preflight";
+  const currentPhaseValue = currentPhase ?? CANONICAL_PHASES.find((phase) => phase !== previousPhaseValue) ?? "launch";
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -70,15 +69,15 @@ export default function MissionTransitionsPage() {
       setError('An existing mission context must be selected. Create one first if none exist.');
       return;
     }
-    if (previousPhase === currentPhase) {
+    if (previousPhaseValue === currentPhaseValue) {
       setError('A transition must move between two different phases.');
       return;
     }
-    if (previousPhase === 'custom' && !prevCustomLabel.trim()) {
+    if (previousPhaseValue === 'custom' && !prevCustomLabel.trim()) {
       setError('A custom label is required for the previous custom phase.');
       return;
     }
-    if (currentPhase === 'custom' && !currCustomLabel.trim()) {
+    if (currentPhaseValue === 'custom' && !currCustomLabel.trim()) {
       setError('A custom label is required for the current custom phase.');
       return;
     }
@@ -95,10 +94,10 @@ export default function MissionTransitionsPage() {
       id,
       missionContextId: activeContext.id,
       missionId: activeContext.missionId,
-      previousPhase,
-      currentPhase,
-      ...(previousPhase === 'custom' ? { previousCustomPhaseLabel: prevCustomLabel.trim() } : {}),
-      ...(currentPhase === 'custom' ? { currentCustomPhaseLabel: currCustomLabel.trim() } : {}),
+      previousPhase: previousPhaseValue,
+      currentPhase: currentPhaseValue,
+      ...(previousPhaseValue === 'custom' ? { previousCustomPhaseLabel: prevCustomLabel.trim() } : {}),
+      ...(currentPhaseValue === 'custom' ? { currentCustomPhaseLabel: currCustomLabel.trim() } : {}),
       occurredAt: isoOccurred,
       recordedAt: now,
       createdAt: now,
@@ -111,7 +110,7 @@ export default function MissionTransitionsPage() {
 
     const res = await saveMissionTransition(transition);
     if (res.ok) {
-      setTransitions((prev) => [...prev, res.value]);
+      await mutateTransitions((current = []) => [...current, res.value], { revalidate: false });
       setNote('');
       setSuccessMsg(`Transition [${res.value.previousPhase} → ${res.value.currentPhase}] recorded for mission '${activeContext.missionName}'.`);
     } else {
@@ -121,19 +120,18 @@ export default function MissionTransitionsPage() {
 
   return (
     <AppShell>
-      <section className="max-w-4xl mx-auto py-6">
-        <h1 className="text-2xl font-bold mb-2">Mission Transitions</h1>
-        <p className="text-sm text-slate-600 mb-6">
-          Record explicit phase transitions for a crew mission. Transitions represent user-observed boundaries and are never inferred from timestamps.
-        </p>
+      <section className="instrument-page mx-auto max-w-5xl py-4">
+        <PageHeader eyebrow="Context · user recorded" title="Mission transitions" description="Record explicit phase transitions for a crew mission. Transitions represent user-observed boundaries and are never inferred from timestamps." />
 
-        {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>}
-        {successMsg && <div className="mb-4 p-3 bg-emerald-100 text-emerald-800 rounded">{successMsg}</div>}
+        {contextsError && <p role="alert" className="mb-4 rounded-control border border-alert/40 bg-alert/10 p-3 text-alert-ink">Mission contexts could not be read: {contextsError.message}</p>}
+        {transitionsError && <p role="alert" className="mb-4 rounded-control border border-alert/40 bg-alert/10 p-3 text-alert-ink">Mission transitions could not be read: {transitionsError.message}</p>}
+        {error && <div role="alert" className="mb-4 rounded-control border border-alert/40 bg-alert/10 p-3 text-alert-ink">{error}</div>}
+        {successMsg && <div role="status" className="mb-4 rounded-control border border-ion/30 bg-ion/10 p-3 text-ion-soft">{successMsg}</div>}
 
-        {contexts.length === 0 ? (
-          <div className="p-6 bg-amber-50 border border-amber-200 rounded mb-6 text-center">
-            <p className="text-amber-800 font-medium mb-2">No Mission Contexts Found</p>
-            <p className="text-sm text-amber-700 mb-4">
+        {contextsError ? null : contextsLoading ? <p role="status" className="text-sm text-glow-muted">Reading saved mission contexts…</p> : contexts.length === 0 ? (
+          <div className="mb-7 rounded-panel border border-ember/30 bg-ember/5 p-5 text-center sm:p-7">
+            <p className="mb-2 font-semibold text-amber-200">No mission contexts found</p>
+            <p className="mb-4 text-sm text-glow-muted">
               Mission transitions must be recorded against an existing mission context.
             </p>
             <Link href="/mission/contexts" className="btn-primary inline-block">
@@ -141,13 +139,14 @@ export default function MissionTransitionsPage() {
             </Link>
           </div>
         ) : (
-          <form onSubmit={handleCreate} className="bg-slate-50 border border-slate-200 rounded p-4 mb-6">
-            <h2 className="text-lg font-semibold mb-4">Record New Mission Transition</h2>
-            <div className="grid grid-cols-2 gap-4 mb-4">
+          <form onSubmit={handleCreate} className="mb-7 rounded-panel border border-horizon bg-hull-raised/65 p-5 shadow-panel sm:p-6">
+            <h2 className="mb-4 text-lg font-semibold text-glow">Record a mission transition</h2>
+            <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium mb-1">Select Mission Context</label>
+                <label htmlFor="transition-mission-context" className="mb-1 block text-sm font-medium">Select mission context</label>
                 <select
-                  value={selectedContextId}
+                  id="transition-mission-context"
+                  value={selectedContextId || contexts[0]?.id || ""}
                   onChange={(e) => {
                     setSelectedContextId(e.target.value);
                     const matching = contexts.find((c) => c.id === e.target.value);
@@ -157,7 +156,7 @@ export default function MissionTransitionsPage() {
                       setCurrentPhase(next);
                     }
                   }}
-                  className="w-full border rounded p-2 text-sm bg-white"
+                  className="instrument-control"
                 >
                   {contexts.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -166,26 +165,28 @@ export default function MissionTransitionsPage() {
                   ))}
                 </select>
                 {activeContext && (
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="mt-2 text-xs text-glow-muted">
                     Inherits Mission ID: <span className="font-mono">{activeContext.missionId}</span>
                   </p>
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Transition Occurred At</label>
+                <label htmlFor="transition-occurred-at" className="mb-1 block text-sm font-medium">Transition occurred at</label>
                 <input
+                  id="transition-occurred-at"
                   type="datetime-local"
                   value={occurredAt}
                   onChange={(e) => setOccurredAt(e.target.value)}
-                  className="w-full border rounded p-2 text-sm bg-white"
+                  className="instrument-control"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Previous Phase</label>
+                <label htmlFor="transition-previous-phase" className="mb-1 block text-sm font-medium">Previous phase</label>
                 <select
-                  value={previousPhase}
+                  id="transition-previous-phase"
+                  value={previousPhaseValue}
                   onChange={(e) => setPreviousPhase(e.target.value as MissionPhase)}
-                  className="w-full border rounded p-2 text-sm bg-white"
+                  className="instrument-control"
                 >
                   {CANONICAL_PHASES.map((p) => (
                     <option key={p} value={p}>{p}</option>
@@ -193,47 +194,51 @@ export default function MissionTransitionsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">New Phase</label>
+                <label htmlFor="transition-current-phase" className="mb-1 block text-sm font-medium">New phase</label>
                 <select
-                  value={currentPhase}
+                  id="transition-current-phase"
+                  value={currentPhaseValue}
                   onChange={(e) => setCurrentPhase(e.target.value as MissionPhase)}
-                  className="w-full border rounded p-2 text-sm bg-white"
+                  className="instrument-control"
                 >
                   {CANONICAL_PHASES.map((p) => (
                     <option key={p} value={p}>{p}</option>
                   ))}
                 </select>
               </div>
-              {previousPhase === 'custom' && (
+              {previousPhaseValue === 'custom' && (
                 <div>
-                  <label className="block text-sm font-medium mb-1">Previous Custom Phase Label</label>
+                  <label htmlFor="transition-previous-custom" className="mb-1 block text-sm font-medium">Previous custom phase label</label>
                   <input
                     type="text"
+                    id="transition-previous-custom"
                     value={prevCustomLabel}
                     onChange={(e) => setPrevCustomLabel(e.target.value)}
-                    className="w-full border rounded p-2 text-sm bg-white"
+                    className="instrument-control"
                   />
                 </div>
               )}
-              {currentPhase === 'custom' && (
+              {currentPhaseValue === 'custom' && (
                 <div>
-                  <label className="block text-sm font-medium mb-1">New Custom Phase Label</label>
+                  <label htmlFor="transition-current-custom" className="mb-1 block text-sm font-medium">New custom phase label</label>
                   <input
                     type="text"
+                    id="transition-current-custom"
                     value={currCustomLabel}
                     onChange={(e) => setCurrCustomLabel(e.target.value)}
-                    className="w-full border rounded p-2 text-sm bg-white"
+                    className="instrument-control"
                   />
                 </div>
               )}
-              <div className="col-span-2">
-                <label className="block text-sm font-medium mb-1">Transition Note (optional)</label>
+              <div className="sm:col-span-2">
+                <label htmlFor="transition-note" className="mb-1 block text-sm font-medium">Transition note (optional)</label>
                 <input
+                  id="transition-note"
                   type="text"
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder="e.g. Spacecraft reached stable low Earth orbit"
-                  className="w-full border rounded p-2 text-sm bg-white"
+                  className="instrument-control"
                 />
               </div>
             </div>
@@ -241,33 +246,22 @@ export default function MissionTransitionsPage() {
           </form>
         )}
 
-        <h2 className="text-lg font-semibold mb-3">Persisted Mission Transitions ({transitions.length})</h2>
-        {transitions.length === 0 ? (
-          <p className="text-sm text-slate-500 italic p-4 bg-slate-100 rounded">
-            No mission transitions recorded yet. Complete the form above to record a phase change.
-          </p>
+        <h2 className="mb-3 text-lg font-semibold text-glow">Persisted mission transitions ({transitionsLoading ? "…" : transitions.length})</h2>
+        {transitionsError ? null : transitionsLoading ? <p role="status" className="text-sm text-glow-muted">Reading saved mission transitions…</p> : transitions.length === 0 ? (
+          <EmptyState title="No mission transitions recorded">Record an explicit transition above. Phase boundaries are never inferred from timestamps or placeholder scenarios.</EmptyState>
         ) : (
-          <ul className="space-y-2">
-            {transitions.map((t) => (
-              <li key={t.id} className="p-3 bg-white border border-slate-200 rounded">
-                <div className="font-semibold text-slate-900">
-                  <span className="text-cyan-800 font-bold">{t.previousPhase}</span>
-                  <span className="mx-2 text-slate-400">→</span>
-                  <span className="text-emerald-800 font-bold">{t.currentPhase}</span>
-                </div>
-                <div className="text-sm text-slate-600">
-                  Mission: <span className="font-medium">{t.missionId}</span> | Context ID: <span className="font-mono text-xs">{t.missionContextId}</span>
-                </div>
-                {t.note && <div className="text-xs text-slate-500 mt-1">Note: {t.note}</div>}
-                <div className="text-xs text-slate-400 mt-1">Occurred: {new Date(t.occurredAt).toLocaleString()} | ID: {t.id}</div>
-              </li>
-            ))}
-          </ul>
+          <EventStream entries={transitions.map((transition) => ({
+            id: transition.id,
+            title: `${transition.previousPhase === "custom" ? transition.previousCustomPhaseLabel : transition.previousPhase} → ${transition.currentPhase === "custom" ? transition.currentCustomPhaseLabel : transition.currentPhase}`,
+            timestamp: transition.occurredAt,
+            detail: <span>Mission: {transition.missionId}{transition.note ? ` · ${transition.note}` : ""}</span>,
+            badge: <ProvenanceLabel>Manual transition</ProvenanceLabel>,
+          }))} />
         )}
 
         <div className="flex gap-4 mt-6 text-sm">
-          <Link href="/mission/contexts" className="text-cyan-700 hover:underline">← Mission Contexts</Link>
-          <Link href="/mission/events" className="text-cyan-700 hover:underline">Go to Mission Events →</Link>
+          <Link href="/mission/contexts" className="text-sm font-medium text-ion-soft underline-offset-4 hover:underline">← Mission Contexts</Link>
+          <Link href="/mission/events" className="text-sm font-medium text-ion-soft underline-offset-4 hover:underline">Go to Mission Events →</Link>
         </div>
       </section>
     </AppShell>

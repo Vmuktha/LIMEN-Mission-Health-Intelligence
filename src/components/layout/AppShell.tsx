@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { SceneBackground, SceneProvider } from "@/components/scene";
 import { NavRail } from "./NavRail";
 import { Topbar } from "./Topbar";
+import { StorageStatus } from "@/components/storage/StorageStatus";
 
 export type AppShellVariant = "reading" | "immersive";
 
@@ -18,10 +19,10 @@ export type AppShellVariant = "reading" | "immersive";
  * full-bleed cinematic composition, and asks for the WebGL scene layer. Only
  * the landing route uses it; every other route keeps the CSS scene.
  */
-export function AppShell({ children, variant = "reading" }: { readonly children: ReactNode; readonly variant?: AppShellVariant }) {
+export function AppShell({ children, variant = "reading", environment = "operational" }: { readonly children: ReactNode; readonly variant?: AppShellVariant; readonly environment?: "operational" | "simulation" }) {
   return (
     <SceneProvider layer={variant === "immersive" ? "webgl" : "css"}>
-      <div className={`relative flex min-h-screen flex-col ${variant === "immersive" ? "bg-void text-glow" : "text-ink"}`}>
+      <div className="relative flex min-h-screen flex-col bg-void text-glow">
         <SceneBackground />
         <a
           href="#main-content"
@@ -34,8 +35,11 @@ export function AppShell({ children, variant = "reading" }: { readonly children:
           <NavRail />
           <main
             id="main-content"
-            className={variant === "immersive" ? "min-w-0 flex-1" : "min-w-0 flex-1 bg-surface-muted px-6 py-10 md:px-10"}
+            className={variant === "immersive" ? "min-w-0 flex-1" : "min-w-0 flex-1 border-l border-horizon/40 bg-hull/85 px-5 py-8 backdrop-blur-sm sm:px-7 md:px-10 md:py-10"}
           >
+            {environment === "operational" && <div className="border-b border-horizon/30 px-5 py-2.5 sm:px-7 md:px-10">
+              <StorageStatus compact />
+            </div>}
             {children}
           </main>
         </div>

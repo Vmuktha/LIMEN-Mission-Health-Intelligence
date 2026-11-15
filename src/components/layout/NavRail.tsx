@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { isActiveRoute } from "./CompactNav";
 import { NavLinkItem } from "./NavLinkItem";
-import { NAV_GROUPS, navItemsForGroup } from "./nav-items";
+import { NAV_GROUPS, navItemsForPath } from "./nav-items";
 
 /**
  * The large-breakpoint navigation rail. Destinations are grouped by the kind
@@ -12,6 +12,7 @@ import { NAV_GROUPS, navItemsForGroup } from "./nav-items";
  */
 export function NavRail() {
   const pathname = usePathname();
+  const navItems = navItemsForPath(pathname);
 
   return (
     <nav
@@ -31,7 +32,7 @@ export function NavRail() {
           <div key={group.id} className="mt-6 first:mt-1">
             <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-glow-muted">{group.label}</p>
             <ul className="flex flex-col gap-0.5">
-              {navItemsForGroup(group.id).map((item) => (
+              {navItems.filter((item) => item.group === group.id).map((item) => (
                 <li key={item.href}>
                   <NavLinkItem item={item} active={isActiveRoute(pathname, item.href)} variant="rail" />
                 </li>

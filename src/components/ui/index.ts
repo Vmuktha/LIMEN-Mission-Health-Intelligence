@@ -4,3 +4,4 @@ export { Card, type CardElement, type CardElevation, type CardPadding, type Card
 export { Notice, type NoticeProps, type NoticeTone } from "./Notice";
 export { SectionHeader, type SectionHeaderProps } from "./SectionHeader";
 export { Stat, type StatProps } from "./Stat";
+export { DataCard, DataTable, DetailPanel, EmptyState, EventStream, FormField, MetricCard, PageHeader, PhaseTimeline, ProvenanceLabel, StatusIndicator } from "./InstrumentUI";

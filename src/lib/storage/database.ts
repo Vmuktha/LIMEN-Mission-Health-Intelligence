@@ -128,33 +128,43 @@ export async function runMultiStoreTransaction(
     try {
       // First, delete all records in the specified stores using the adapter.
       for (const storeName of storeNames) {
-        const keys = await adapter.getAll(storeName);
-        for (const key of keys) {
-          // @ts-ignore – adapter.delete expects a string key
-          await (adapter as any).delete(storeName, (key as any).id ?? key);
+        const records = await adapter.getAll<unknown>(storeName);
+        for (const record of records) {
+          const key = typeof record === "object" && record !== null && "id" in record
+            ? record.id
+            : record;
+          if (typeof key === "string") await adapter.delete(storeName, key);
         }
       }
       // Create a minimal dummy transaction object satisfying the test's expectations.
-      const dummyTx: any = {
+      const dummyTx = {
         objectStoreNames: storeNames,
-        objectStore(name: string) {
+        objectStore() {
           return {
             getAllKeys() {
-              const request: any = {
+              const request: {
+                result: IDBValidKey[];
+                error: DOMException | null;
+                onsuccess: ((this: IDBRequest<IDBValidKey[]>, event: Event) => unknown) | null;
+                onerror: ((this: IDBRequest<IDBValidKey[]>, event: Event) => unknown) | null;
+              } = {
                 result: [],
-                onsuccess: () => {},
-                onerror: () => {},
+                error: null,
+                onsuccess: null,
+                onerror: null,
               };
               // Resolve immediately with empty keys (all records already deleted).
-              setTimeout(() => request.onsuccess(), 0);
-              return request;
+              setTimeout(() => {
+                request.onsuccess?.call(request as unknown as IDBRequest<IDBValidKey[]>, new Event("success"));
+              }, 0);
+              return request as unknown as IDBRequest<IDBValidKey[]>;
             },
           };
         },
         oncomplete: null,
         onerror: null,
         onabort: null,
-      };
+      } as unknown as IDBTransaction;
       // Run the user-provided operation (which may attempt deletions via the transaction).
       await operation(dummyTx);
       return success(undefined);
@@ -172,7 +182,11 @@ export async function runMultiStoreTransaction(
     try {
       await operation(tx);
     } catch (error) {
-      (tx as any).abort?.();
+      try {
+        tx.abort();
+      } catch {
+        // Preserve the operation error if the transaction is already inactive.
+      }
       return failure('database-error', errorMessage(error, 'Transaction failed'));
     }
     // Ensure transaction completes before reporting success
@@ -208,8 +222,12 @@ class IndexedDbAdapter implements StorageAdapter {
     return new Promise((resolve, reject) => {
       const transaction = this.database.transaction(storeName, mode);
       const request = operation(transaction.objectStore(storeName));
-      request.onerror = () => reject(request.error);
-      request.onsuccess = () => resolve(request.result);
+      let result: T;
+      request.onerror = () => reject(request.error ?? new Error(`IndexedDB request failed for ${storeName}.`));
+      request.onsuccess = () => { result = request.result; };
+      transaction.oncomplete = () => resolve(result);
+      transaction.onerror = () => reject(transaction.error ?? request.error ?? new Error(`IndexedDB transaction failed for ${storeName}.`));
+      transaction.onabort = () => reject(transaction.error ?? request.error ?? new Error(`IndexedDB transaction aborted for ${storeName}.`));
     });
   }
 }

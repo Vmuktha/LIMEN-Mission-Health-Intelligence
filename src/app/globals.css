@@ -7,15 +7,9 @@
  * (never raw palette steps), typography, radius, border, elevation and motion
  * scales, plus the global accessibility baseline.
  *
- * Two families of surfaces exist during the migration:
- *   - The dark instrument system (void, hull, horizon, ion, plasma, ember,
- *     alert) is the approved palette for the cinematic redesign.
- *   - The light surface family (surface, line, ink, accent/ember/alert roles)
- *     is the vocabulary the current product surfaces already use, tokenised
- *     without changing how they look.
- *
- * Route redesigns adopt the dark instrument system in later phases; until then
- * every rendered value stays visually identical.
+ * Shared semantic tokens drive a layered dark instrument system across the
+ * application. Scientific content stays on calm elevated surfaces; cyan and
+ * amber are reserved for action, provenance, and meaningful distinctions.
  */
 
 :root {
@@ -28,36 +22,38 @@
   --limen-ion-soft: #67e8f9;
   --limen-plasma: #a78bfa;
   --limen-plasma-bright: #e879f9;
+  --limen-earth-night: #152132;
+  --limen-cloud: #c7e0f5;
   --limen-ember: #f59e0b;
   --limen-alert: #f43f5e;
   --limen-glow: #f8fafc;
   --limen-glow-muted: #94a3b8;
   --limen-glow-faint: #62748e;
 
-  /* ── Light surfaces ─────────────────────────────────────────────────────── */
-  --limen-surface: #ffffff;
-  --limen-surface-muted: #f8fafc;
-  --limen-surface-sunken: #f1f5f9;
-  --limen-line: #e2e8f0;
-  --limen-line-strong: #cad5e2;
-  --limen-ink: #0f172b;
-  --limen-ink-strongest: #020618;
-  --limen-ink-strong: #314158;
-  --limen-ink-soft: #45556c;
-  --limen-ink-muted: #62748e;
-  --limen-ink-faint: #90a1b9;
+  /* ── Shared elevated surfaces and readable content roles ─────────────── */
+  --limen-surface: #141b2b;
+  --limen-surface-muted: #0b101c;
+  --limen-surface-sunken: #080c15;
+  --limen-line: #1e293b;
+  --limen-line-strong: #334155;
+  --limen-ink: #cbd5e1;
+  --limen-ink-strongest: #f8fafc;
+  --limen-ink-strong: #e2e8f0;
+  --limen-ink-soft: #cbd5e1;
+  --limen-ink-muted: #94a3b8;
+  --limen-ink-faint: #64748b;
 
-  /* ── Accent, warning and alert roles on light surfaces ─────────────────── */
-  --limen-accent-edge: #a2f4fd;
-  --limen-accent-wash: #ecfeff;
-  --limen-accent-ink: #005f78;
-  --limen-accent-label: #007492;
-  --limen-ember-edge: #fee685;
-  --limen-ember-wash: #fffbeb;
-  --limen-ember-ink: #7b3306;
-  --limen-alert-edge: #ffccd3;
-  --limen-alert-wash: #fff1f2;
-  --limen-alert-ink: #8b0836;
+  /* ── Restrained semantic accents ──────────────────────────────────────── */
+  --limen-accent-edge: #155e75;
+  --limen-accent-wash: #082f49;
+  --limen-accent-ink: #a5f3fc;
+  --limen-accent-label: #67e8f9;
+  --limen-ember-edge: #78350f;
+  --limen-ember-wash: #2b1d0b;
+  --limen-ember-ink: #fcd34d;
+  --limen-alert-edge: #881337;
+  --limen-alert-wash: #2b0c19;
+  --limen-alert-ink: #fda4af;
 
   /* ── Motion ─────────────────────────────────────────────────────────────── */
   --limen-duration-fast: 120ms;
@@ -101,7 +97,7 @@
   --color-glow-muted: var(--limen-glow-muted);
   --color-glow-faint: var(--limen-glow-faint);
 
-  /* Light surfaces */
+  /* Content surfaces and readable text roles */
   --color-surface: var(--limen-surface);
   --color-surface-muted: var(--limen-surface-muted);
   --color-surface-sunken: var(--limen-surface-sunken);
@@ -177,6 +173,190 @@
   to {
     transform: translate3d(1.5%, 2%, 0);
   }
+}
+
+.limen-starfield {
+  background-image:
+    radial-gradient(circle at 12% 18%, color-mix(in oklab, var(--limen-glow) 64%, transparent) 0 0.7px, transparent 1px),
+    radial-gradient(circle at 76% 22%, color-mix(in oklab, var(--limen-ion-soft) 40%, transparent) 0 0.8px, transparent 1.1px),
+    radial-gradient(circle at 42% 68%, color-mix(in oklab, var(--limen-glow) 32%, transparent) 0 0.7px, transparent 1px);
+  background-position: 0 0, 60px 30px, 20px 80px;
+  background-size: 223px 191px, 317px 257px, 419px 337px;
+  opacity: 0.52;
+}
+
+.limen-earth-fallback {
+  position: absolute;
+  top: 49%;
+  right: clamp(-3rem, 2vw, 2rem);
+  width: clamp(24rem, 43vw, 40rem);
+  aspect-ratio: 1;
+  overflow: visible;
+  border-radius: 50%;
+  opacity: 0.92;
+  transform: translate3d(0, -50%, 0);
+  filter: drop-shadow(0 0 36px color-mix(in oklab, var(--limen-ion) 10%, transparent));
+}
+
+.limen-earth-fallback__surface,
+.limen-earth-fallback__terminator,
+.limen-earth-fallback__atmosphere {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+.limen-earth-fallback__surface {
+  background-color: #102234;
+  background-image: url("/earth/earth-texture.png");
+  background-position: 48% 50%;
+  background-repeat: no-repeat;
+  background-size: 200% 100%;
+  box-shadow: inset 28px -10px 50px rgb(1 5 12 / 0.82), inset -10px 5px 36px rgb(124 218 255 / 0.12);
+}
+
+.limen-earth-fallback__terminator {
+  background: linear-gradient(104deg, rgb(2 7 15 / 0.84) 5%, rgb(3 9 18 / 0.36) 38%, transparent 67%);
+}
+
+.limen-earth-fallback__atmosphere {
+  inset: -1.5%;
+  border: 1px solid rgb(103 232 249 / 0.34);
+  box-shadow: inset 0 0 20px rgb(34 211 238 / 0.12), 0 0 24px rgb(34 211 238 / 0.16);
+  mask-image: radial-gradient(circle, transparent 68%, #000 70%);
+}
+
+@media (max-width: 767px) {
+  .limen-earth-fallback {
+    top: 27%;
+    right: -17%;
+    width: min(84vw, 27rem);
+    opacity: 0.66;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .limen-earth-fallback {
+    transform: translate3d(0, -50%, 0);
+  }
+}
+
+.recovery-dashboard :is(.bg-white, .bg-slate-50, .bg-slate-50\/60) {
+  background-color: var(--limen-hull-raised);
+}
+
+.recovery-dashboard .bg-slate-100 {
+  background-color: var(--limen-void);
+}
+
+.recovery-dashboard :is(.border-slate-200, .border-slate-300) {
+  border-color: var(--limen-horizon);
+}
+
+.recovery-dashboard :is(.text-slate-950, .text-slate-900, .text-slate-800, .text-slate-700) {
+  color: var(--limen-glow);
+}
+
+.recovery-dashboard :is(.text-slate-600, .text-slate-500, .text-slate-400, .text-slate-300) {
+  color: var(--limen-glow-muted);
+}
+
+.recovery-dashboard :is(.bg-amber-50) {
+  background-color: color-mix(in oklab, var(--limen-ember) 12%, var(--limen-void));
+}
+
+.recovery-dashboard :is(.border-amber-200) {
+  border-color: color-mix(in oklab, var(--limen-ember) 42%, transparent);
+}
+
+.recovery-dashboard :is(.text-amber-900, .text-amber-800, .text-amber-700) {
+  color: var(--limen-ember-ink);
+}
+
+.recovery-dashboard .bg-rose-50 {
+  background-color: color-mix(in oklab, var(--limen-alert) 12%, var(--limen-void));
+}
+
+.recovery-dashboard :is(.border-rose-200) {
+  border-color: color-mix(in oklab, var(--limen-alert) 42%, transparent);
+}
+
+.recovery-dashboard :is(.text-rose-900, .text-rose-800, .text-rose-700) {
+  color: var(--limen-alert-ink);
+}
+
+.recovery-dashboard :is(.text-cyan-700, .text-cyan-800) {
+  color: var(--limen-ion-soft);
+}
+
+.instrument-page input:not([type="range"]),
+.instrument-page select,
+.instrument-page textarea {
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid var(--limen-horizon);
+  border-radius: var(--radius-control);
+  background: color-mix(in oklab, var(--limen-void) 72%, var(--limen-hull));
+  padding: 0.65rem 0.8rem;
+  color: var(--limen-glow);
+  font: inherit;
+  color-scheme: dark;
+}
+
+.instrument-page label {
+  color: var(--limen-glow-muted);
+}
+
+.instrument-page .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-control);
+  background: var(--limen-ion);
+  padding: 0.65rem 1rem;
+  color: var(--limen-void);
+  font-size: 0.875rem;
+  font-weight: 650;
+  transition: background-color var(--limen-duration-fast) var(--limen-ease-standard);
+}
+
+.instrument-page .btn-primary:hover {
+  background: var(--limen-ion-soft);
+}
+
+.instrument-page input:not([type="range"]):focus-visible,
+.instrument-page select:focus-visible,
+.instrument-page textarea:focus-visible {
+  border-color: var(--limen-ion-soft);
+  outline: 2px solid color-mix(in oklab, var(--limen-ion) 58%, transparent);
+  outline-offset: 2px;
+}
+
+.instrument-control {
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid var(--limen-horizon);
+  border-radius: var(--radius-control);
+  background: color-mix(in oklab, var(--limen-void) 72%, var(--limen-hull));
+  padding: 0.65rem 0.8rem;
+  color: var(--limen-glow);
+  font: inherit;
+  color-scheme: dark;
+}
+
+.instrument-control::placeholder {
+  color: var(--limen-glow-faint);
+}
+
+.instrument-control:focus-visible {
+  border-color: var(--limen-ion-soft);
+  outline: 2px solid color-mix(in oklab, var(--limen-ion) 58%, transparent);
+  outline-offset: 2px;
+}
+
+.instrument-control:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 @layer base {
