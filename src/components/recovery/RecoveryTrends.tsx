@@ -83,7 +83,7 @@ export function RecoveryTrends({
             {series.observations.map((observation) => {
               const point = series.points.find((candidate) => candidate.observation.sessionId === observation.sessionId) ?? null;
               return (
-                <tr key={observation.sessionId} className="border-b border-slate-100 last:border-b-0">
+                <tr id={`assessment-${observation.sessionId}`} key={observation.sessionId} className="border-b border-slate-100 last:border-b-0">
                   <td className="py-2 pr-4 text-slate-700">{formatRecoveryDate(observation.completedAt)}</td>
                   <td className="py-2 pr-4 font-medium tabular-nums text-slate-900">{point ? formatRecoveryChartValue(point.value, presentation.precision) : "Unavailable"}</td>
                   <td className="py-2 pr-4 tabular-nums text-slate-600">{point ? `${point.eligibleTrialCount} / ${point.totalTrialCount}` : "—"}</td>

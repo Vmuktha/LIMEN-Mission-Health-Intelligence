@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { HeroStage } from "./HeroStage";
 import { StorySection } from "./StorySection";
+import { MissionBrief } from "@/components/mission/MissionBrief";
 
 const RECOVERY_METRICS: readonly { readonly label: string; readonly unit: string }[] = [
   { label: "Reaction time", unit: "ms" },
@@ -27,6 +28,7 @@ export function LandingExperience() {
   return (
     <div ref={revealRef} className="relative bg-void">
       <HeroStage />
+      <MissionBrief />
 
       <StorySection id="landing-system" index="01" eyebrow="The instrument" title="One mission. Several kinds of evidence." tone="hull">
         <p>

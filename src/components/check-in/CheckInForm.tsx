@@ -20,8 +20,10 @@ export interface CheckInFormProps {
 export function CheckInForm({ context, assessmentSessionId, missionContextId, missionPhase, onSaved, onSkip }: CheckInFormProps) {
   const [answers, setAnswers] = useState<ExtendedCheckInAnswers>({});
   const [reviewing, setReviewing] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [message, setMessage] = useState<string | null>(null);
+  const hasUnsavedAnswers = Object.values(answers).some((value) => value !== undefined && value !== "");
   const title = context === "pre-assessment" ? "Pre-assessment check-in" : context === "post-assessment" ? "Post-assessment check-in" : "Crew check-in";
 
   function updateScore(field: ExtendedCheckInScoreField, value: SelfReportedScore | undefined) {
@@ -70,28 +72,36 @@ export function CheckInForm({ context, assessmentSessionId, missionContextId, mi
 
       {!reviewing ? (
         <form onSubmit={(event) => { event.preventDefault(); setReviewing(true); }} className="mt-6 flex flex-col gap-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p aria-live="polite" className="text-xs text-glow-muted">{status === "saving" ? "Saving…" : hasUnsavedAnswers ? "Unsaved changes · nothing is stored until you confirm" : "No unsaved answers"}</p>
+            <button type="button" aria-expanded={expanded} aria-controls={`${context}-expanded-context`} onClick={() => setExpanded((value) => !value)} className="rounded-control border border-horizon px-3 py-2 text-xs font-medium text-glow-muted hover:border-ion/50 hover:text-glow focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ion">
+              {expanded ? "Use quick check-in" : "Add expanded context"}
+            </button>
+          </div>
           <fieldset>
-            <legend className="mb-3 text-sm font-semibold text-glow">Original six items</legend>
+            <legend className="mb-3 text-sm font-semibold text-glow">Quick check-in · six core items</legend>
             <div className="grid gap-3 md:grid-cols-2">
               {CHECK_IN_FIELDS.map((item) => (
                 <SymptomScale key={item.field} id={`${context}-${item.field}`} label={item.label} description={`${item.scale}. ${item.polarity === "higher-is-worse" ? "Higher means more reported difficulty." : "Higher means more confidence."}`} value={answers[item.field]} onChange={(value) => updateScore(item.field, value)} />
               ))}
             </div>
           </fieldset>
-          <fieldset>
-            <legend className="mb-1 text-sm font-semibold text-glow">Optional expanded context</legend>
-            <p className="mb-3 text-xs leading-5 text-glow-muted">These six additional self-report items are optional; leaving them blank does not record a zero.</p>
-            <div className="grid gap-3 md:grid-cols-2">
-              {EXTENDED_CHECK_IN_FIELDS.filter((item) => !CHECK_IN_FIELDS.some((original) => original.field === item.field)).map((item) => (
-                <SymptomScale key={item.field} id={`${context}-${item.field}`} label={item.label} description={`${item.scale}. ${item.polarity === "higher-is-worse" ? "Higher means more reported difficulty." : "Higher means a better self-reported state."}`} value={answers[item.field]} onChange={(value) => updateScore(item.field, value)} />
-              ))}
-            </div>
-          </fieldset>
-          <label htmlFor={`${context}-note`} className="flex flex-col gap-2 text-sm font-medium text-glow">
-            Optional note
-            <textarea id={`${context}-note`} value={answers.freeTextNote ?? ""} maxLength={1000} onChange={(event) => { setAnswers((previous) => ({ ...previous, freeTextNote: event.target.value })); setStatus("idle"); setMessage(null); }} className="instrument-control min-h-24 resize-y text-sm font-normal" />
-            <span className="text-xs font-normal text-glow-muted">Up to 1,000 characters. Avoid including identifying or sensitive details.</span>
-          </label>
+          <div id={`${context}-expanded-context`} hidden={!expanded} className="flex flex-col gap-6">
+            <fieldset>
+              <legend className="mb-1 text-sm font-semibold text-glow">Expanded context · optional</legend>
+              <p className="mb-3 text-xs leading-5 text-glow-muted">These six additional self-report items are optional; leaving them blank does not record a zero.</p>
+              <div className="grid gap-3 md:grid-cols-2">
+                {EXTENDED_CHECK_IN_FIELDS.filter((item) => !CHECK_IN_FIELDS.some((original) => original.field === item.field)).map((item) => (
+                  <SymptomScale key={item.field} id={`${context}-${item.field}`} label={item.label} description={`${item.scale}. ${item.polarity === "higher-is-worse" ? "Higher means more reported difficulty." : "Higher means a better self-reported state."}`} value={answers[item.field]} onChange={(value) => updateScore(item.field, value)} />
+                ))}
+              </div>
+            </fieldset>
+            <label htmlFor={`${context}-note`} className="flex flex-col gap-2 text-sm font-medium text-glow">
+              Optional note
+              <textarea id={`${context}-note`} value={answers.freeTextNote ?? ""} maxLength={1000} onChange={(event) => { setAnswers((previous) => ({ ...previous, freeTextNote: event.target.value })); setStatus("idle"); setMessage(null); }} className="instrument-control min-h-24 resize-y text-sm font-normal" />
+              <span className="text-xs font-normal text-glow-muted">Up to 1,000 characters. Avoid including identifying or sensitive details.</span>
+            </label>
+          </div>
           {message && <p role={status === "error" ? "alert" : "status"} className={`text-sm ${status === "error" ? "text-alert-ink" : "text-ion-soft"}`}>{message}</p>}
           <div className="flex flex-wrap gap-3">
             <button type="submit" className="rounded-control bg-ion px-4 py-2.5 text-sm font-semibold text-void transition-colors hover:bg-ion-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ion">Review answers</button>
@@ -103,7 +113,7 @@ export function CheckInForm({ context, assessmentSessionId, missionContextId, mi
           <div className="rounded-card border border-horizon bg-void/50 p-4">
             <h3 className="font-semibold text-glow">Review before saving</h3>
             <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
-              {EXTENDED_CHECK_IN_FIELDS.map((field) => (
+              {EXTENDED_CHECK_IN_FIELDS.filter((field) => CHECK_IN_FIELDS.some((core) => core.field === field.field) || expanded || answers[field.field] !== undefined).map((field) => (
                 <div key={field.field} className="flex items-baseline justify-between gap-3 border-b border-horizon/50 py-1.5">
                   <dt className="text-glow-muted">{field.label}</dt>
                   <dd className="font-medium tabular-nums text-glow">{answers[field.field] ?? "Not answered"}</dd>

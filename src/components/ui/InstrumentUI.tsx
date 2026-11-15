@@ -79,7 +79,7 @@ export function EventStream({ entries }: { readonly entries: readonly { readonly
   return (
     <ol className="relative flex flex-col gap-0 border-l border-horizon pl-5">
       {entries.map((entry) => (
-        <li key={entry.id} className="relative pb-6 last:pb-0">
+        <li id={entry.id} key={entry.id} className="relative pb-6 last:pb-0">
           <span aria-hidden="true" className="absolute -left-[1.55rem] top-1 size-2 rounded-full border border-ion/70 bg-hull-raised" />
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="font-medium text-glow">{entry.title}</h3>

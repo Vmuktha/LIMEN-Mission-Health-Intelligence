@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
 import { AppShell } from '@/components/layout/AppShell';
@@ -42,7 +42,12 @@ export default function MissionEventsPage() {
   });
   const [selectedContextId, setSelectedContextId] = useState('');
   const [description, setDescription] = useState('');
-  const [occurredAt, setOccurredAt] = useState(() => new Date().toISOString().slice(0, 16));
+  const [occurredAt, setOccurredAt] = useState("");
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setOccurredAt(new Date().toISOString().slice(0, 16)), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
   const [phase, setPhase] = useState<MissionPhase | '' | null>(null);
   const [operationalContext, setOperationalContext] = useState('');
   const [error, setError] = useState('');

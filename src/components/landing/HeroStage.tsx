@@ -122,6 +122,12 @@ export function HeroStage() {
                 Run the assessment
               </Link>
               <Link
+                href="#mission-brief-title"
+                className="inline-flex items-center gap-2 rounded-control border border-horizon/80 px-5 py-3 text-sm font-medium text-glow-muted transition-colors duration-fast ease-linen hover:border-ion/60 hover:text-glow"
+              >
+                Mission Brief
+              </Link>
+              <Link
                 href="/concordance"
                 className="inline-flex items-center gap-2 rounded-control border border-horizon/80 px-5 py-3 text-sm font-medium text-glow-muted transition-colors duration-fast ease-linen hover:border-ion/60 hover:text-glow"
               >

@@ -80,6 +80,14 @@ export const NAV_ITEMS: readonly NavItem[] = [
     icon: "recovery",
   },
   {
+    href: "/personal-trends",
+    label: "Personal trends",
+    shortLabel: "Trends",
+    description: "Chronological performance and self-reported observations",
+    group: "analyse",
+    icon: "recovery",
+  },
+  {
     href: "/concordance",
     label: "Signal Concordance",
     shortLabel: "Concordance",
@@ -104,6 +112,22 @@ export const NAV_ITEMS: readonly NavItem[] = [
     icon: "evidence",
   },
   {
+    href: "/evidence/methodology",
+    label: "Scientific methodology",
+    shortLabel: "Methods",
+    description: "Understand the task protocol, metric eligibility and evidence boundaries",
+    group: "analyse",
+    icon: "evidence",
+  },
+  {
+    href: "/observations",
+    label: "Observations & events",
+    shortLabel: "Observations",
+    description: "Review versioned descriptive notices with linked browser-local records",
+    group: "analyse",
+    icon: "recovery",
+  },
+  {
     href: "/privacy",
     label: "Privacy & local data",
     shortLabel: "Privacy",
@@ -111,7 +135,43 @@ export const NAV_ITEMS: readonly NavItem[] = [
     group: "analyse",
     icon: "evidence",
   },
+  {
+    href: "/simulation",
+    label: "Mission simulation lab",
+    shortLabel: "Simulation",
+    description: "Explore the isolated, fictional Aster-1 mission scenario",
+    group: "analyse",
+    icon: "mission",
+  },
 ];
+
+const SIMULATION_PATHS: Readonly<Record<string, string>> = {
+  "/mission": "/simulation/mission",
+  "/mission/contexts": "/simulation/contexts",
+  "/mission/events": "/simulation/events",
+  "/mission/transitions": "/simulation/transitions",
+  "/assessment": "/simulation/assessments",
+  "/check-in": "/simulation/check-ins",
+  "/recovery": "/simulation/recovery",
+  "/personal-trends": "/simulation/trends",
+  "/concordance": "/simulation/concordance",
+  "/evidence": "/simulation/evidence",
+  "/evidence/osdr": "/simulation/osdr",
+  "/evidence/methodology": "/simulation/methodology",
+  "/observations": "/simulation/observations",
+  "/simulation": "/simulation",
+};
+
+export function navItemsForPath(pathname: string): readonly NavItem[] {
+  if (!pathname.startsWith("/simulation")) return NAV_ITEMS;
+  return NAV_ITEMS
+    .filter((item) => item.href !== "/privacy")
+    .map((item) => ({
+      ...item,
+      href: SIMULATION_PATHS[item.href] ?? item.href,
+      ...(item.href === "/simulation" ? { label: "Astronaut profiles", shortLabel: "Profiles" } : {}),
+    }));
+}
 
 export function navItemsForGroup(group: NavGroupId): readonly NavItem[] {
   return NAV_ITEMS.filter((item) => item.group === group);

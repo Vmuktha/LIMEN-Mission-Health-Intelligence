@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
 import { AppShell } from '@/components/layout/AppShell';
@@ -46,7 +46,12 @@ export default function MissionTransitionsPage() {
   const [currentPhase, setCurrentPhase] = useState<MissionPhase | null>(null);
   const [prevCustomLabel, setPrevCustomLabel] = useState('');
   const [currCustomLabel, setCurrCustomLabel] = useState('');
-  const [occurredAt, setOccurredAt] = useState(() => new Date().toISOString().slice(0, 16));
+  const [occurredAt, setOccurredAt] = useState("");
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setOccurredAt(new Date().toISOString().slice(0, 16)), 0);
+    return () => window.clearTimeout(timer);
+  }, []);
   const [note, setNote] = useState('');
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
