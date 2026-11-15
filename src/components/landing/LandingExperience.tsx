@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 import { HeroStage } from "./HeroStage";
 import { StorySection } from "./StorySection";
+import { BeyondHorizonCarousel } from "./BeyondHorizonCarousel";
 import { MissionBrief } from "@/components/mission/MissionBrief";
 
 const RECOVERY_METRICS: readonly { readonly label: string; readonly unit: string }[] = [
@@ -116,6 +117,8 @@ export function LandingExperience() {
           ))}
         </ul>
       </StorySection>
+
+      <BeyondHorizonCarousel />
 
       <section aria-labelledby="landing-next" className="relative border-t border-horizon/50 bg-void px-6 py-16 md:px-10 md:py-24 lg:px-14">
         <div className="mx-auto w-full max-w-[1180px]" data-reveal>
